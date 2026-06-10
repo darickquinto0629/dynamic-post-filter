@@ -3,11 +3,11 @@ Contributors: Your Name
 Tags: custom post type, filter, taxonomy, ajax
 Requires at least: 5.0
 Tested up to: 6.6
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A WordPress plugin for displaying custom post types with dynamic AJAX taxonomy filtering.
+A WordPress plugin for displaying custom post types with dynamic AJAX taxonomy filtering and loading indicators.
 
 == Description ==
 
@@ -39,6 +39,11 @@ Display events with 20 posts per page:
 3. Use the `[all-menu]` shortcode in pages or posts
 
 == Changelog ==
+
+= 1.1.0 =
+* Added loading indicator spinner for filter and pagination requests
+* Improved user experience with visual feedback during AJAX operations
+* Fixed CSS styling for inline loader styles
 
 = 1.0.0 =
 * Initial release

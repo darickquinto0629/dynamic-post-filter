@@ -3,7 +3,7 @@
  * Plugin Name: Dynamic Post Filter
  * Plugin URI: https://example.com/dynamic-post-filter
  * Description: Display posts and custom post types with dynamic AJAX taxonomy filtering and pagination
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Darick L. Quinto
  * Author URI: https://jollity.io
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'ALL_MENU_FILTER_VERSION', '1.0.0' );
+define( 'ALL_MENU_FILTER_VERSION', '1.1.0' );
 define( 'ALL_MENU_FILTER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ALL_MENU_FILTER_URL', plugin_dir_url( __FILE__ ) );
 

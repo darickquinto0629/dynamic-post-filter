@@ -10,6 +10,7 @@ The Dynamic Post Filter plugin is designed to showcase any post type (posts, men
 
 ✅ **Dynamic AJAX Filtering** - Filter posts by taxonomy without page reload  
 ✅ **Smart Pagination** - Pagination that adapts to filtered results  
+✅ **Loading Indicator** - Spinning loader shows during filter/pagination requests  
 ✅ **Responsive Grid Layout** - Supports responsive column classes (featured-col-2, featured-col-3)  
 ✅ **ACF Integration** - Display custom ACF field values (e.g., pricing)  
 ✅ **Featured Images** - Background image support with fallback placeholder  
@@ -97,6 +98,17 @@ Insert this shortcode on your page:
 4. Page scrolls smoothly to top of posts
 5. Posts and pagination update
 
+### Loading Indicator
+
+The plugin displays a loading spinner overlay when users interact with filters or pagination:
+
+- **When it appears:** After clicking a filter button or pagination button
+- **What it looks like:** Semi-transparent white overlay with rotating blue spinner
+- **When it disappears:** Immediately when results load or if an error occurs
+- **Purpose:** Provides visual feedback that the page is processing the request
+
+The loading indicator is automatically positioned over the posts container and does not require any configuration.
+
 ## Customization Guide
 
 ### Modifying the Post Item Template
@@ -140,6 +152,7 @@ if ( $custom_field ) {
 
 Add CSS for these classes:
 
+- `.all-menu-posts-wrapper` - Posts container wrapper (has position: relative)
 - `.custom-post-loop` - Posts container (ul element)
 - `.post-item` - Individual post item (li element)
 - `.menu-featured-image` - Featured image background
@@ -148,6 +161,36 @@ Add CSS for these classes:
 - `.all-menu-filter-btn` - Individual filter button
 - `.all-menu-pagination` - Pagination container
 - `.all-menu-page-btn` - Pagination button
+- `.all-menu-loader` - Loading indicator overlay
+- `.all-menu-loader.active` - Loading indicator when visible
+- `.all-menu-spinner` - Spinning animation element
+
+#### Customizing the Loading Indicator
+
+The loading spinner uses built-in CSS styles. To customize the appearance, add CSS to your theme:
+
+```css
+/* Change spinner color */
+.all-menu-spinner {
+  border-top-color: #ff6b6b !important; /* Your color */
+}
+
+/* Change overlay background opacity */
+.all-menu-loader {
+  background-color: rgba(255, 255, 255, 0.5) !important; /* Less transparent */
+}
+
+/* Change spinner size */
+.all-menu-spinner {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+/* Change animation speed */
+.all-menu-spinner {
+  animation: spin 0.8s linear infinite !important; /* Faster */
+}
+```
 
 ### WP Rocket Caching Compatibility
 
@@ -259,5 +302,17 @@ For issues, feature requests, or contributions, please visit the GitHub reposito
 
 ---
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Last Updated:** 2026-06-10
+
+## Changelog
+
+### v1.1.0
+
+- Added loading indicator spinner for filter and pagination requests
+- Improved user experience with visual feedback during AJAX operations
+- Fixed CSS styling for inline loader styles
+
+### v1.0.0
+
+- Initial release
