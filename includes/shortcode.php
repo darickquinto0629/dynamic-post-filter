@@ -96,7 +96,9 @@ function all_menu_callback( $atts = array() ) {
 	// Display taxonomy filter buttons if taxonomy is set
 	if ( ! empty( $atts['taxonomy'] ) && ! is_wp_error( $terms ) && count( $terms ) > 0 ) {
 		$output .= '<div id="menu-filter-container" class="all-menu-filters">';
-		$output .= '<button class="all-menu-filter-btn active" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
+		// Only mark "All Items" as active if no term is pre-selected
+		$active_class_all = ( empty( $atts['term'] ) ) ? 'active' : '';
+		$output .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
 
 		foreach ( $terms as $term ) {
 			$active_class = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'active' : '';
