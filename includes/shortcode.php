@@ -46,6 +46,46 @@ function all_menu_callback( $atts = array() ) {
 		true
 	);
 
+	// Enqueue a style for inline CSS
+	wp_enqueue_style( 'all-menu-filter-style', false, array(), ALL_MENU_FILTER_VERSION );
+
+	// Add inline CSS for loading indicator
+	wp_add_inline_style( 'all-menu-filter-style', 
+		'.all-menu-loader {
+			display: none;
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: rgba(255, 255, 255, 0.8);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 999;
+			border-radius: 4px;
+		}
+		.all-menu-loader.active {
+			display: flex;
+		}
+		.all-menu-spinner {
+			border: 4px solid #f3f3f3;
+			border-top: 4px solid #3498db;
+			border-radius: 50%;
+			width: 40px;
+			height: 40px;
+			animation: spin 1s linear infinite;
+		}
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+		.all-menu-posts-wrapper {
+			position: relative;
+		}
+	'
+	);
+
 	// Localize script with AJAX URL and nonce
 	wp_localize_script(
 		'all-menu-filter',
@@ -108,6 +148,12 @@ function all_menu_callback( $atts = array() ) {
 		$output .= '</div>';
 	}
 
+	// Posts wrapper with loading indicator
+	$output .= '<div class="all-menu-posts-wrapper">';
+	$output .= '<div class="all-menu-loader" data-loader-id="' . esc_attr( $unique_id ) . '">';
+	$output .= '<div class="all-menu-spinner"></div>';
+	$output .= '</div>';
+
 	// Posts container
 	$output .= '<ul id="' . esc_attr( $unique_id ) . '" class="custom-post-loop">';
 
@@ -153,6 +199,7 @@ function all_menu_callback( $atts = array() ) {
 	}
 
 	$output .= '</ul>';
+	$output .= '</div>'; // Close posts wrapper
 
 	// Add pagination if pagination is enabled
 	if ( intval( $atts['posts_per_page'] ) > 0 ) {

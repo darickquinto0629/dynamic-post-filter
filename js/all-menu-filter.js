@@ -17,6 +17,9 @@ jQuery(document).ready(function ($) {
     // Add active class to clicked button
     btn.addClass("active");
 
+    // Show loading indicator
+    $('[data-loader-id="' + uniqueId + '"]').addClass("active");
+
     // Send AJAX request
     $.ajax({
       type: "POST",
@@ -34,6 +37,9 @@ jQuery(document).ready(function ($) {
         unique_id: uniqueId,
       },
       success: function (response) {
+        // Hide loading indicator
+        $('[data-loader-id="' + uniqueId + '"]').removeClass("active");
+
         if (response.success) {
           // Update the posts container
           $("#" + uniqueId).html(response.data.posts);
@@ -54,6 +60,8 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
+        // Hide loading indicator
+        $('[data-loader-id="' + uniqueId + '"]').removeClass("active");
         console.error("AJAX error:", error);
       },
     });
@@ -73,6 +81,9 @@ jQuery(document).ready(function ($) {
     var postsPerPage = btn.data("posts-per-page");
     var uniqueId = btn.data("unique-id");
 
+    // Show loading indicator
+    $('[data-loader-id="' + uniqueId + '"]').addClass("active");
+
     // Send AJAX request
     $.ajax({
       type: "POST",
@@ -90,6 +101,9 @@ jQuery(document).ready(function ($) {
         unique_id: uniqueId,
       },
       success: function (response) {
+        // Hide loading indicator
+        $('[data-loader-id="' + uniqueId + '"]').removeClass("active");
+
         if (response.success) {
           // Update the posts container
           $("#" + uniqueId).html(response.data.posts);
@@ -107,6 +121,8 @@ jQuery(document).ready(function ($) {
         }
       },
       error: function (xhr, status, error) {
+        // Hide loading indicator
+        $('[data-loader-id="' + uniqueId + '"]').removeClass("active");
         console.error("AJAX error:", error);
       },
     });
