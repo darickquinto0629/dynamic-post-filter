@@ -1,0 +1,36 @@
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE/Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# WordPress
+wp-config.php
+wp-content/
+wp-includes/
+wp-*.php
+
+# Node/Package Manager
+node_modules/
+npm-debug.log
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build/Dist
+dist/
+build/
+
+# Logs
+*.log
