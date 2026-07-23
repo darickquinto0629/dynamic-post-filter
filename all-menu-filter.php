@@ -27,19 +27,6 @@ define( 'ALL_MENU_FILTER_URL', plugin_dir_url( __FILE__ ) );
 // Include the shortcode file
 require_once ALL_MENU_FILTER_PATH . 'includes/shortcode.php';
 
-// Hook to enqueue scripts and styles
-add_action( 'wp_enqueue_scripts', 'all_menu_filter_enqueue_scripts' );
-
-/**
- * Enqueue plugin scripts and styles
- */
-function all_menu_filter_enqueue_scripts() {
-	// Only enqueue on pages that use the shortcode
-	if ( ! is_admin() ) {
-		wp_enqueue_script( 'jquery' );
-	}
-}
-
 // Activation hook
 register_activation_hook( __FILE__, 'all_menu_filter_activation' );
 
