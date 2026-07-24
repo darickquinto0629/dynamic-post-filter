@@ -13,6 +13,82 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_shortcode( 'all-menu', 'all_menu_callback' );
 
 /**
+ * Get featured image URL with fallback
+ *
+ * @param int $post_id Post ID
+ * @return string Featured image URL or fallback
+ */
+function all_menu_get_featured_image( $post_id ) {
+	$featured_image_url = get_the_post_thumbnail_url( $post_id, 'medium_large' );
+	$fallback_image_url = '/wp-content/uploads/2026/06/beef-brisket.jpg';
+	return $featured_image_url ? $featured_image_url : $fallback_image_url;
+}
+
+/**
+ * Get post excerpt with fallback to content
+ *
+ * @param int $post_id Post ID
+ * @return string Post excerpt or content
+ */
+function all_menu_get_excerpt( $post_id ) {
+	return ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
+}
+
+/**
+ * Generate modal ID for a post
+ *
+ * @param int $post_id Post ID
+ * @return string Modal ID (post-modal-{post_id})
+ */
+function all_menu_get_modal_id( $post_id ) {
+	return 'post-modal-' . $post_id;
+}
+
+/**
+ * Get starting price field for a post
+ *
+ * @param int $post_id Post ID
+ * @return string Starting price value or empty
+ */
+function all_menu_get_starting_price( $post_id ) {
+	return get_field( 'starting_at', $post_id );
+}
+
+/**
+ * Sort terms by custom menu order
+ *
+ * @param array $terms Array of term objects
+ * @return array Sorted terms
+ */
+function all_menu_sort_terms( $terms ) {
+	$custom_order = array(
+		'bbq',
+		'sandwiches',
+		'sides',
+		'desserts',
+		'drinks',
+	);
+
+	usort( $terms, function( $a, $b ) use ( $custom_order ) {
+		$a_pos = array_search( $a->slug, $custom_order );
+		$b_pos = array_search( $b->slug, $custom_order );
+
+		// Put terms not found in the array at the end
+		if ( $a_pos === false ) {
+			$a_pos = 999;
+		}
+
+		if ( $b_pos === false ) {
+			$b_pos = 999;
+		}
+
+		return $a_pos - $b_pos;
+	} );
+
+	return $terms;
+}
+
+/**
  * Render a single post item HTML
  *
  * @param int $post_id Post ID
@@ -22,7 +98,7 @@ add_shortcode( 'all-menu', 'all_menu_callback' );
  * @return string Post item HTML
  */
 function all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at ) {
-	$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
+	$excerpt = all_menu_get_excerpt( $post_id );
 	
 	$html = '<li class="post-item">';
 	$html .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
@@ -231,31 +307,8 @@ if ( ! empty( $atts['taxonomy'] ) ) {
         )
     );
 
-    // Custom menu order
-    $custom_order = array(
-        'bbq',
-        'sandwiches',
-        'sides',
-        'desserts',
-        'drinks',
-    );
-
-    usort( $terms, function( $a, $b ) use ( $custom_order ) {
-
-        $a_pos = array_search( $a->slug, $custom_order );
-        $b_pos = array_search( $b->slug, $custom_order );
-
-        // Put terms not found in the array at the end
-        if ( $a_pos === false ) {
-            $a_pos = 999;
-        }
-
-        if ( $b_pos === false ) {
-            $b_pos = 999;
-        }
-
-        return $a_pos - $b_pos;
-    } );
+    // Sort terms by custom menu order
+    $terms = all_menu_sort_terms( $terms );
 }
 
 	// Build WP_Query arguments
@@ -356,13 +409,9 @@ if ( ! empty( $atts['taxonomy'] ) ) {
 		while ( $query->have_posts() ) {
 			$query->the_post();
 			$post_id = get_the_ID();
-			$featured_image_url = get_the_post_thumbnail_url( $post_id, 'medium_large' );
-			$fallback_image_url = '/wp-content/uploads/2026/06/beef-brisket.jpg';
-			$featured_image_url = $featured_image_url ? $featured_image_url : $fallback_image_url;
-			$starting_at = get_field( 'starting_at', $post_id );
-			
-			// Create modal ID for this post
-			$modal_id = 'post-modal-' . $post_id;
+			$featured_image_url = all_menu_get_featured_image( $post_id );
+			$starting_at = all_menu_get_starting_price( $post_id );
+			$modal_id = all_menu_get_modal_id( $post_id );
 			
 			$output .= all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at );
 			$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
@@ -507,13 +556,9 @@ function all_menu_filter_ajax() {
 		while ( $query->have_posts() ) {
 			$query->the_post();
 			$post_id = get_the_ID();
-			$featured_image_url = get_the_post_thumbnail_url( $post_id, 'medium_large' );
-			$fallback_image_url = '/wp-content/uploads/2026/06/beef-brisket.jpg';
-			$featured_image_url = $featured_image_url ? $featured_image_url : $fallback_image_url;
-			$starting_at = get_field( 'starting_at', $post_id );
-			
-			// Create modal ID for this post
-			$modal_id = 'post-modal-' . $post_id;
+			$featured_image_url = all_menu_get_featured_image( $post_id );
+			$starting_at = all_menu_get_starting_price( $post_id );
+			$modal_id = all_menu_get_modal_id( $post_id );
 			
 		$posts_output .= all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at );
 		$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
@@ -664,14 +709,7 @@ if( $featured_posts ):
     foreach( $featured_posts as $post ): 
         // Add post ID to global variable for use in other functions
         $featured_post_ids[] = $post->ID;
-        $modal_id = 'featured-modal-' . $post->ID;
-        
-        // Retrieve the featured image URL for the post (medium_large size)
-        $featured_image_url = get_the_post_thumbnail_url( $post->ID, 'medium_large' );
-        
-        // Use a fallback/placeholder image if no featured image is set for the post
-        $fallback_image_url = '/wp-content/uploads/2026/06/beef-brisket.jpg';
-        $featured_image_url = $featured_image_url ? $featured_image_url : $fallback_image_url;
+        $featured_image_url = all_menu_get_featured_image( $post->ID );
         
         // Setup this post for WP functions (variable must be named $post).
         setup_postdata($post);
@@ -680,26 +718,28 @@ if( $featured_posts ):
         <!-- Apply responsive class attribute (escaped for security) -->
         <li class="<?php echo esc_attr( $class ); ?>">
           <!-- Display featured image as background (URL escaped for security) -->
-          <div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="<?php echo esc_attr( $modal_id ); ?>" style="background-image: url(<?php echo esc_url( $featured_image_url ); ?>) "></div></div>
+          <div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="<?php echo esc_attr( all_menu_get_modal_id( $post->ID ) ); ?>" style="background-image: url(<?php echo esc_url( $featured_image_url ); ?>) "></div></div>
           <div class="featured-content">
               <!-- Output post title -->
               <h4 class="ddc-font"><?php echo $post->post_title; ?></h4>
               <!-- Output post excerpt (first 20 words) -->
               <?php 
-              $excerpt = ! empty( get_the_excerpt( $post->ID ) ) ? get_the_excerpt( $post->ID ) : $post->post_content;
+              $excerpt = all_menu_get_excerpt( $post->ID );
               echo '<p class="excerpt">' . wp_trim_words( $excerpt, 20, "..." ) . '</p>'; 
               ?>
               <div class="dashed-line"></div>
               <div class="fc-bottom">
-                  <?php if(get_field('starting_at', $post->ID)): ?>
+                  <?php $starting_price = all_menu_get_starting_price( $post->ID ); ?>
+                  <?php if( $starting_price ): ?>
                       <div>
-                          <p class="ddc-font">Starting at <span class="sp-font color-rust">$<?php echo get_field('starting_at', $post->ID); ?></span></p>
+                          <p class="ddc-font">Starting at <span class="sp-font color-rust">$<?php echo esc_html( $starting_price ); ?></span></p>
                       </div>
                   <?php endif; ?>
-                  <a class="plus-icon" href="javascript:void(0)" data-modal-id="<?php echo esc_attr( $modal_id ); ?>"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>
+                  <a class="plus-icon" href="javascript:void(0)" data-modal-id="<?php echo esc_attr( all_menu_get_modal_id( $post->ID ) ); ?>"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>
               </div>
               <?php 
               // Generate modal for this post
+              $modal_id = all_menu_get_modal_id( $post->ID );
 				$modals_output .= '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
 				$modals_output .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
 				$modals_output .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';		
