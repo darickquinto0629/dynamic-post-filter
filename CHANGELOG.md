@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
 
+### Phase 6: Simplify Pagination Rendering
+
+#### Changed
+
+- **Refactored Pagination Function** (`includes/shortcode.php`)
+  - `all_menu_get_pagination()` now uses internal `_all_menu_render_page_button()` helper
+  - Removed duplicated button HTML generation (was repeated 3+ times)
+  - Simplified logic while keeping public API unchanged
+
+#### Technical Details (Phase 6)
+
+- **Internal Helper:** `_all_menu_render_page_button()` (private, not for external use)
+  - Builds single pagination button with all data attributes
+  - Reduces code duplication for prev, page numbers, and next buttons
+  - Single source of truth for button HTML structure
+- **Public API:** `all_menu_get_pagination()` remains unchanged
+- **Zero Output Change:** Pagination HTML output identical
+- **Backward Compatibility:** 100% compatible with existing functionality
+- **Risk Mitigation:** Minimal changes, no logic changes, only code cleanup
+
+#### Testing (Phase 6)
+
+- ✅ Single page (no pagination rendered)
+- ✅ Two pages (prev and next buttons)
+- ✅ Multiple pages (10+ pages with ellipsis)
+- ✅ Ellipsis logic preserved (shows first, last, current +/- range)
+- ✅ Prev button works correctly
+- ✅ Next button works correctly
+- ✅ Page number buttons functional
+- ✅ Filter parameters persist across pagination clicks
+
+### Files Modified (Phase 6)
+
+- `includes/shortcode.php` — Added 1 internal helper, refactored pagination function
+
+---
+
 ### Phase 5: Centralize Asset Loading
 
 #### Added

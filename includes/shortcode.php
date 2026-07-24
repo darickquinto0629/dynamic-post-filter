@@ -680,6 +680,22 @@ wp_send_json_success( array(
 }
 
 /**
+ * Generate a pagination button with data attributes (internal helper)
+ *
+ * Private helper for pagination rendering. Not intended for external use.
+ * Builds a single page button with filter parameters for AJAX request.
+ *
+ * @param int $page_num Page number
+ * @param array $atts Shortcode attributes (post_type, taxonomy, term, orderby, order, posts_per_page)
+ * @param string $unique_id Unique container ID
+ * @param string $label Button label text
+ * @return string Button HTML
+ */
+function _all_menu_render_page_button( $page_num, $atts, $unique_id, $label ) {
+	return '<button class="all-menu-page-btn" data-page="' . intval( $page_num ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $label ) . '</button>';
+}
+
+/**
  * Generate pagination HTML with state preservation
  * 
  * Creates previous/page number/next buttons with data attributes
@@ -701,7 +717,7 @@ function all_menu_get_pagination( $query, $atts, $unique_id ) {
 	// Previous page link
 	if ( $query->query_vars['paged'] > 1 ) {
 		$prev_page = $query->query_vars['paged'] - 1;
-		$pagination_html .= '<button class="all-menu-page-btn" data-page="' . intval( $prev_page ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">Prev</button>';
+		$pagination_html .= _all_menu_render_page_button( $prev_page, $atts, $unique_id, 'Prev' );
 	}
 
 	// Page number links with ellipsis for large pagination
@@ -743,7 +759,7 @@ function all_menu_get_pagination( $query, $atts, $unique_id ) {
 			if ( $i === $current_page ) {
 				$pagination_html .= '<span class="all-menu-page-num active">' . intval( $i ) . '</span>';
 			} else {
-				$pagination_html .= '<button class="all-menu-page-btn" data-page="' . intval( $i ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . intval( $i ) . '</button>';
+				$pagination_html .= _all_menu_render_page_button( $i, $atts, $unique_id, $i );
 			}
 
 			$last_shown = $i;
@@ -753,7 +769,7 @@ function all_menu_get_pagination( $query, $atts, $unique_id ) {
 	// Next page link
 	if ( $query->query_vars['paged'] < $query->max_num_pages ) {
 		$next_page = $query->query_vars['paged'] + 1;
-		$pagination_html .= '<button class="all-menu-page-btn" data-page="' . intval( $next_page ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">Next</button>';
+		$pagination_html .= _all_menu_render_page_button( $next_page, $atts, $unique_id, 'Next' );
 	}
 
 	$pagination_html .= '</div>';
