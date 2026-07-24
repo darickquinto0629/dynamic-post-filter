@@ -19,13 +19,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Builds a single page button with filter parameters for AJAX request.
  *
  * @param int $page_num Page number
- * @param array $atts Shortcode attributes (post_type, taxonomy, term, orderby, order, posts_per_page)
+ * @param array $atts Shortcode attributes (post_type, taxonomy, term, orderby, order, posts_per_page, enable_pagination)
  * @param string $unique_id Unique container ID
  * @param string $label Button label text
  * @return string Button HTML
  */
 function _all_menu_render_page_button( $page_num, $atts, $unique_id, $label ) {
-	return '<button class="all-menu-page-btn" data-page="' . intval( $page_num ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $label ) . '</button>';
+	$enable_pagination = isset( $atts['enable_pagination'] ) ? esc_attr( $atts['enable_pagination'] ) : 'yes';
+	return '<button class="all-menu-page-btn" data-page="' . intval( $page_num ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '" data-enable-pagination="' . $enable_pagination . '">' . esc_html( $label ) . '</button>';
 }
 
 /**

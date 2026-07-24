@@ -78,13 +78,14 @@ function all_menu_filter_ajax() {
 	}
 
 	// Extract and sanitize POST parameters with defaults
-	$post_type      = isset( $_POST['post_type'] ) ? sanitize_text_field( $_POST['post_type'] ) : 'post';
-	$taxonomy       = isset( $_POST['taxonomy'] ) ? sanitize_text_field( $_POST['taxonomy'] ) : '';
-	$term           = isset( $_POST['term'] ) ? sanitize_text_field( $_POST['term'] ) : '';
-	$orderby        = isset( $_POST['orderby'] ) ? sanitize_text_field( $_POST['orderby'] ) : 'date';
-	$order          = isset( $_POST['order'] ) ? sanitize_text_field( $_POST['order'] ) : 'DESC';
-	$posts_per_page = isset( $_POST['posts_per_page'] ) ? intval( $_POST['posts_per_page'] ) : 10;
-	$paged          = isset( $_POST['paged'] ) ? intval( $_POST['paged'] ) : 1;
+	$post_type        = isset( $_POST['post_type'] ) ? sanitize_text_field( $_POST['post_type'] ) : 'post';
+	$taxonomy         = isset( $_POST['taxonomy'] ) ? sanitize_text_field( $_POST['taxonomy'] ) : '';
+	$term             = isset( $_POST['term'] ) ? sanitize_text_field( $_POST['term'] ) : '';
+	$orderby          = isset( $_POST['orderby'] ) ? sanitize_text_field( $_POST['orderby'] ) : 'date';
+	$order            = isset( $_POST['order'] ) ? sanitize_text_field( $_POST['order'] ) : 'DESC';
+	$posts_per_page   = isset( $_POST['posts_per_page'] ) ? intval( $_POST['posts_per_page'] ) : 10;
+	$paged            = isset( $_POST['paged'] ) ? intval( $_POST['paged'] ) : 1;
+	$enable_pagination = isset( $_POST['enable_pagination'] ) ? sanitize_text_field( $_POST['enable_pagination'] ) : 'yes';
 
 	// Build query arguments for WP_Query
 	$query_args = all_menu_build_query_args(
@@ -131,16 +132,18 @@ function all_menu_filter_ajax() {
 
 	wp_reset_postdata();
 
-	// Generate pagination HTML
+	// Generate pagination HTML (if enabled)
 	$pagination_html = '';
-	if ( intval( $posts_per_page ) > 0 ) {
+	$pagination_enabled = strtolower( $enable_pagination ) === 'yes';
+	if ( $pagination_enabled && intval( $posts_per_page ) > 0 ) {
 		$pagination_html = all_menu_get_pagination( $query, array(
-			'post_type'      => $post_type,
-			'posts_per_page' => $posts_per_page,
-			'orderby'        => $orderby,
-			'order'          => $order,
-			'taxonomy'       => $taxonomy,
-			'term'           => $term,
+			'post_type'         => $post_type,
+			'posts_per_page'    => $posts_per_page,
+			'orderby'           => $orderby,
+			'order'             => $order,
+			'taxonomy'          => $taxonomy,
+			'term'              => $term,
+			'enable_pagination' => $enable_pagination,
 		), isset( $_POST['unique_id'] ) ? sanitize_text_field( $_POST['unique_id'] ) : '' );
 	}
 

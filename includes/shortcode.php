@@ -61,12 +61,13 @@ function all_menu_callback( $atts = array() ) {
 	// Parse shortcode attributes with defaults
 	$atts = shortcode_atts(
 		array(
-			'post_type'      => 'post',      // Default post type
-			'posts_per_page' => 8,          // Posts per page for pagination
-			'orderby'        => 'date',
-			'order'          => 'ASC',
-			'taxonomy'       => '',          // Custom taxonomy
-			'term'           => '',          // Term to filter by
+			'post_type'        => 'post',      // Default post type
+			'posts_per_page'   => 8,          // Posts per page for pagination
+			'orderby'          => 'date',
+			'order'            => 'ASC',
+			'taxonomy'         => '',          // Custom taxonomy
+			'term'             => '',          // Term to filter by
+			'enable_pagination' => 'yes',     // Enable/disable pagination (yes/no)
 		),
 		$atts,
 		'all-menu'
@@ -143,7 +144,8 @@ function all_menu_callback( $atts = array() ) {
 	$output .= $modals_output; // Add modals AFTER the wrapper
 
 	// Add pagination if pagination is enabled
-	if ( intval( $atts['posts_per_page'] ) > 0 ) {
+	$enable_pagination = strtolower( $atts['enable_pagination'] ) === 'yes';
+	if ( $enable_pagination && intval( $atts['posts_per_page'] ) > 0 ) {
 		$pagination_html = all_menu_get_pagination( $query, $atts, $unique_id );
 		$output .= $pagination_html;
 	}

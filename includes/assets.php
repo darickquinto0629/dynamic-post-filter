@@ -66,6 +66,7 @@ function all_menu_enqueue_assets() {
 		array(
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'all_menu_nonce' ),
+			'enable_pagination' => 'yes', // Default pagination enabled
 		)
 	);
 }

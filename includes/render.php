@@ -120,11 +120,13 @@ function all_menu_render_filters( $atts, $terms, $unique_id ) {
 	
 	// Only mark "All Items" as active if no term is pre-selected
 	$active_class_all = empty( $atts['term'] ) ? 'active' : '';
-	$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
+	$enable_pagination = isset( $atts['enable_pagination'] ) ? esc_attr( $atts['enable_pagination'] ) : 'yes';
+	$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '" data-enable-pagination="' . $enable_pagination . '">All Items</button>';
 
 	foreach ( $terms as $term ) {
 		$active_class = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'active' : '';
-		$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $term->name ) . '</button>';
+		$enable_pagination = isset( $atts['enable_pagination'] ) ? esc_attr( $atts['enable_pagination'] ) : 'yes';
+		$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '" data-enable-pagination="' . $enable_pagination . '">' . esc_html( $term->name ) . '</button>';
 	}
 
 	$html .= '<a class="all-menu-filter-btn catering-btn" href="' . esc_url( all_menu_get_catering_url() ) . '" target="_blank">Catering</a>';
@@ -142,12 +144,14 @@ function all_menu_render_filters( $atts, $terms, $unique_id ) {
  * @return string Dropdown HTML
  */
 function all_menu_render_dropdown( $atts, $terms, $unique_id ) {
-	$html = '<select class="menu-filter-dropdown" data-unique-id="' . esc_attr( $unique_id ) . '">';
+	$enable_pagination = isset( $atts['enable_pagination'] ) ? esc_attr( $atts['enable_pagination'] ) : 'yes';
+	$html = '<select class="menu-filter-dropdown" data-unique-id="' . esc_attr( $unique_id ) . '" data-enable-pagination="' . $enable_pagination . '">';
 	$html .= '<option value="">All Items</option>';
 	
 	foreach ( $terms as $term ) {
 		$selected = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'selected' : '';
-		$html .= '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . ' data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '">' . esc_html( $term->name ) . '</option>';
+		$enable_pagination = isset( $atts['enable_pagination'] ) ? esc_attr( $atts['enable_pagination'] ) : 'yes';
+		$html .= '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . ' data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-enable-pagination="' . $enable_pagination . '">' . esc_html( $term->name ) . '</option>';
 	}
 	
 	$html .= '<option value="catering" data-url="' . esc_url( all_menu_get_catering_url() ) . '">Catering</option>';

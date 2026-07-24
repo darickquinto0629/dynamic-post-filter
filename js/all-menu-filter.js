@@ -206,6 +206,7 @@ jQuery(document).ready(function ($) {
       order: $btn.data("order"),
       postsPerPage: $btn.data("posts-per-page"),
       uniqueId: $btn.data("unique-id"),
+      enablePagination: $btn.data("enable-pagination") || "yes",
     };
   }
 
@@ -408,6 +409,7 @@ jQuery(document).ready(function ($) {
       posts_per_page: btnData.postsPerPage,
       paged: pageToUse,
       unique_id: btnData.uniqueId,
+      enable_pagination: btnData.enablePagination,
     };
 
     // Clear old pagination to prevent duplicates after AJAX response
@@ -465,6 +467,7 @@ jQuery(document).ready(function ($) {
       posts_per_page: btnData.postsPerPage,
       paged: page,
       unique_id: btnData.uniqueId,
+      enable_pagination: btnData.enablePagination,
     };
 
     // Clear old pagination to prevent duplicates after AJAX response
