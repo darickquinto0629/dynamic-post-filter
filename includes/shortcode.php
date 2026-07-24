@@ -215,6 +215,108 @@ function all_menu_build_query_args( $post_type, $posts_per_page, $paged, $orderb
 }
 
 /**
+ * Render desktop filter buttons
+ *
+ * @param array $atts Shortcode attributes
+ * @param array $terms Terms for filter buttons
+ * @param string $unique_id Unique container ID
+ * @return string Filter button HTML or empty string
+ */
+function all_menu_render_filters( $atts, $terms, $unique_id ) {
+	if ( empty( $atts['taxonomy'] ) || is_wp_error( $terms ) || count( $terms ) === 0 ) {
+		return '';
+	}
+
+	$html = '<div id="menu-filter-container" class="all-menu-filters">';
+	
+	// Only mark "All Items" as active if no term is pre-selected
+	$active_class_all = empty( $atts['term'] ) ? 'active' : '';
+	$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
+
+	foreach ( $terms as $term ) {
+		$active_class = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'active' : '';
+		$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $term->name ) . '</button>';
+	}
+
+	$html .= '<a class="all-menu-filter-btn catering-btn" href="https://gquebbq.com/catering-bbq/" target="_blank">Catering</a>';
+	$html .= '</div>';
+
+	return $html;
+}
+
+/**
+ * Render mobile filter dropdown
+ *
+ * @param array $atts Shortcode attributes
+ * @param array $terms Terms for dropdown options
+ * @param string $unique_id Unique container ID
+ * @return string Dropdown HTML
+ */
+function all_menu_render_dropdown( $atts, $terms, $unique_id ) {
+	$html = '<select class="menu-filter-dropdown" data-unique-id="' . esc_attr( $unique_id ) . '">';
+	$html .= '<option value="">All Items</option>';
+	
+	foreach ( $terms as $term ) {
+		$selected = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'selected' : '';
+		$html .= '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . ' data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '">' . esc_html( $term->name ) . '</option>';
+	}
+	
+	$html .= '<option value="catering">Catering</option>';
+	$html .= '</select>';
+
+	return $html;
+}
+
+/**
+ * Render loading spinner indicator
+ *
+ * @param string $unique_id Unique container ID
+ * @return string Loader HTML with spinner
+ */
+function all_menu_render_loader( $unique_id ) {
+	$html = '<div class="all-menu-loader" data-loader-id="' . esc_attr( $unique_id ) . '">';
+	$html .= '<div class="all-menu-spinner"></div>';
+	$html .= '</div>';
+
+	return $html;
+}
+
+/**
+ * Render posts container wrapper opening
+ *
+ * @param string $unique_id Unique container ID
+ * @param bool $has_url_params Whether URL has filter parameters
+ * @return string Posts wrapper opening HTML
+ */
+function all_menu_render_posts_wrapper_open( $unique_id, $has_url_params ) {
+	$html = '<div class="all-menu-posts-wrapper">';
+	$html .= all_menu_render_loader( $unique_id );
+	
+	$hidden_class = $has_url_params ? ' amf-hidden-initial' : '';
+	$html .= '<ul id="' . esc_attr( $unique_id ) . '" class="custom-post-loop' . esc_attr( $hidden_class ) . '">';
+
+	return $html;
+}
+
+/**
+ * Render posts container wrapper closing
+ *
+ * @return string Posts wrapper closing HTML
+ */
+function all_menu_render_posts_wrapper_close() {
+	return '</ul></div>';
+}
+
+/**
+ * Render empty state message
+ *
+ * @return string Empty state HTML
+ */
+function all_menu_render_empty_state() {
+	return '<li><p>No posts found.</p></li>';
+}
+
+/**
  * Shortcode callback for [all-menu]
  * 
  * PRIMARY RESPONSIBILITY:
@@ -364,59 +466,15 @@ function all_menu_callback( $atts = array() ) {
 
 	$output = '';
 
-	// Display taxonomy filter buttons if taxonomy is set
-	if ( ! empty( $atts['taxonomy'] ) && ! is_wp_error( $terms ) && count( $terms ) > 0 ) {
-		$output .= '<div id="menu-filter-container" class="all-menu-filters">';
-		// Only mark "All Items" as active if no term is pre-selected
-		$active_class_all = ( empty( $atts['term'] ) ) ? 'active' : '';
-		$output .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
-
-		foreach ( $terms as $term ) {
-			$active_class = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'active' : '';
-			$output .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $term->name ) . '</button>';
-		}
-
-        $output .= '<a class="all-menu-filter-btn catering-btn" href="https://gquebbq.com/catering-bbq/" target="_blank">Catering</a>';
-
-		$output .= '</div>';
-	}
+	// Render desktop filter buttons
+	$output .= all_menu_render_filters( $atts, $terms, $unique_id );
 	
-	// Mobile Menu
-    $output .= '<select class="menu-filter-dropdown" data-unique-id="' . esc_attr( $unique_id ) . '">';
-    
-    $output .= '<option value="">All Items</option>';
-    
-    foreach ( $terms as $term ) {
-        $selected = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'selected' : '';
-    
-        $output .= '<option
-            value="' . esc_attr( $term->slug ) . '"
-            ' . $selected . '
-            data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '"
-            data-post-type="' . esc_attr( $atts['post_type'] ) . '"
-            data-orderby="' . esc_attr( $atts['orderby'] ) . '"
-            data-order="' . esc_attr( $atts['order'] ) . '"
-            data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '"
-        >' . esc_html( $term->name ) . '</option>';
-    }
-    
-    // Catering link option
-    $output .= '<option value="catering">Catering</option>';
-    
-    $output .= '</select>';
+	// Render mobile filter dropdown
+	$output .= all_menu_render_dropdown( $atts, $terms, $unique_id );
 
-	// Posts wrapper with loading indicator
-	$output .= '<div class="all-menu-posts-wrapper">';
-	$output .= '<div class="all-menu-loader" data-loader-id="' . esc_attr( $unique_id ) . '">';
-	$output .= '<div class="all-menu-spinner"></div>';
-	$output .= '</div>';
-
-	// Check if URL has filter params to determine if we should hide initial content
+	// Open posts wrapper container
 	$has_url_params = ! empty( $_GET['amf_post_type'] ) && ! empty( $_GET['amf_taxonomy'] ) ? true : false;
-	$hidden_class = $has_url_params ? ' amf-hidden-initial' : '';
-
-	// Posts container
-	$output .= '<ul id="' . esc_attr( $unique_id ) . '" class="custom-post-loop' . esc_attr( $hidden_class ) . '">';
+	$output .= all_menu_render_posts_wrapper_open( $unique_id, $has_url_params );
 
 	// ========================================
 	// POST ITEM TEMPLATE - CUSTOMIZE THIS SECTION
@@ -444,11 +502,11 @@ function all_menu_callback( $atts = array() ) {
 			$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
 		}
 	} else {
-		$output .= '<li><p>No posts found.</p></li>';
+		$output .= all_menu_render_empty_state();
 	}
 
-	$output .= '</ul>';
-	$output .= '</div>'; // Close posts wrapper
+	// Close posts wrapper
+	$output .= all_menu_render_posts_wrapper_close();
 	$output .= $modals_output; // Add modals AFTER the wrapper
 
 	// Add pagination if pagination is enabled

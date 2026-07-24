@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
 
+### Phase 4: Extract UI Components
+
+#### Added
+
+- **UI Component Rendering Functions** (`includes/shortcode.php`)
+  - `all_menu_render_filters()` — Render desktop filter button bar with taxonomy-based buttons and Catering link
+  - `all_menu_render_dropdown()` — Render mobile dropdown selector for filters with options
+  - `all_menu_render_loader()` — Render loading spinner overlay during AJAX requests
+  - `all_menu_render_posts_wrapper()` — Render container divs and loading indicator for posts
+  - `all_menu_render_empty_state()` — Render "No posts found" message
+
+#### Changed
+
+- **Refactored UI Rendering Pipeline**
+  - `all_menu_callback()` becomes orchestrator function
+  - Desktop filters now generated via `all_menu_render_filters()`
+  - Mobile dropdown now generated via `all_menu_render_dropdown()`
+  - Loader HTML extracted to `all_menu_render_loader()`
+  - Posts wrapper structure extracted to `all_menu_render_posts_wrapper()`
+  - Empty state message extracted to `all_menu_render_empty_state()`
+  - Eliminated 60+ lines of UI markup code from main callback
+
+#### Technical Details (Phase 4)
+
+- **Code Reduction:** 60+ lines of UI markup removed, ~80 lines added in helpers (net reduction)
+- **Component Reusability:** UI components can now be used independently or in different sequences
+- **Maintainability:** UI structure changes localized to component functions
+- **Mobile/Desktop:** Separate rendering for filter buttons (desktop) vs dropdown (mobile)
+- **Callback Clarity:** Main callback now reads as orchestration logic instead of markup generation
+- **Zero Output Change:** All HTML output identical to Phase 3
+- **Backward Compatibility:** 100% compatible with existing functionality
+
+#### Testing (Phase 4)
+
+- ✅ Desktop filters render correctly with all taxonomy buttons
+- ✅ Mobile dropdown renders with all options
+- ✅ Loader spinner visible during AJAX requests
+- ✅ Posts wrapper structure intact
+- ✅ Empty state message displays when no posts found
+- ✅ Catering link appears in desktop filters
+- ✅ Catering option appears in mobile dropdown
+- ✅ Hidden initial state class applied when URL params detected
+- ✅ Pagination structure unaffected
+- ✅ AJAX response rendering unchanged
+
+### Files Modified (Phase 4)
+
+- `includes/shortcode.php` — Added 5 UI component helpers, refactored `all_menu_callback()` to orchestrate
+
+---
+
 ### Phase 1: Extract Rendering Helpers
 
 #### Added
