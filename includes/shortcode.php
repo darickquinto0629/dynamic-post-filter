@@ -178,6 +178,43 @@ function all_menu_render_modal( $post_id, $featured_image_url, $modal_id ) {
 }
 
 /**
+ * Build WP_Query arguments array
+ *
+ * @param string $post_type Post type to query
+ * @param int $posts_per_page Posts per page for pagination
+ * @param int $paged Current page number (1-based)
+ * @param string $orderby Order by field
+ * @param string $order Order direction (ASC/DESC)
+ * @param string $taxonomy Taxonomy slug for filtering (optional)
+ * @param string $term Term slug to filter by (optional)
+ * @return array WP_Query arguments
+ */
+function all_menu_build_query_args( $post_type, $posts_per_page, $paged, $orderby, $order, $taxonomy = '', $term = '' ) {
+	// Build base query arguments
+	$query_args = array(
+		'post_type'      => $post_type,
+		'posts_per_page' => $posts_per_page,
+		'paged'          => $paged,
+		'orderby'        => $orderby,
+		'order'          => $order,
+		'post_status'    => 'publish',
+	);
+
+	// Add taxonomy filter if both taxonomy and term are specified
+	if ( ! empty( $taxonomy ) && ! empty( $term ) ) {
+		$query_args['tax_query'] = array(
+			array(
+				'taxonomy' => $taxonomy,
+				'field'    => 'slug',
+				'terms'    => $term,
+			),
+		);
+	}
+
+	return $query_args;
+}
+
+/**
  * Shortcode callback for [all-menu]
  * 
  * PRIMARY RESPONSIBILITY:
@@ -296,41 +333,31 @@ function all_menu_callback( $atts = array() ) {
 	);
 
 	// Get all terms for the taxonomy if specified
-$terms = array();
+	$terms = array();
 
-if ( ! empty( $atts['taxonomy'] ) ) {
+	if ( ! empty( $atts['taxonomy'] ) ) {
 
-    $terms = get_terms(
-        array(
-            'taxonomy'   => sanitize_text_field( $atts['taxonomy'] ),
-            'hide_empty' => true,
-        )
-    );
+		$terms = get_terms(
+			array(
+				'taxonomy'   => sanitize_text_field( $atts['taxonomy'] ),
+				'hide_empty' => true,
+			)
+		);
 
-    // Sort terms by custom menu order
-    $terms = all_menu_sort_terms( $terms );
-}
+		// Sort terms by custom menu order
+		$terms = all_menu_sort_terms( $terms );
+	}
 
 	// Build WP_Query arguments
-	$query_args = array(
-		'post_type'      => sanitize_text_field( $atts['post_type'] ),
-		'posts_per_page' => intval( $atts['posts_per_page'] ),
-		'paged'          => 1,
-		'orderby'        => sanitize_text_field( $atts['orderby'] ),
-		'order'          => sanitize_text_field( $atts['order'] ),
-		'post_status'    => 'publish',
+	$query_args = all_menu_build_query_args(
+		sanitize_text_field( $atts['post_type'] ),
+		intval( $atts['posts_per_page'] ),
+		1,
+		sanitize_text_field( $atts['orderby'] ),
+		sanitize_text_field( $atts['order'] ),
+		sanitize_text_field( $atts['taxonomy'] ),
+		sanitize_text_field( $atts['term'] )
 	);
-
-	// Add taxonomy filter if specified
-	if ( ! empty( $atts['taxonomy'] ) && ! empty( $atts['term'] ) ) {
-		$query_args['tax_query'] = array(
-			array(
-				'taxonomy' => sanitize_text_field( $atts['taxonomy'] ),
-				'field'    => 'slug',
-				'terms'    => sanitize_text_field( $atts['term'] ),
-			),
-		);
-	}
 
 	// Execute the query
 	$query = new WP_Query( $query_args );
@@ -515,25 +542,15 @@ function all_menu_filter_ajax() {
 	$paged          = isset( $_POST['paged'] ) ? intval( $_POST['paged'] ) : 1;
 
 	// Build query arguments for WP_Query
-	$query_args = array(
-		'post_type'      => $post_type,
-		'posts_per_page' => $posts_per_page,
-		'paged'          => $paged,
-		'orderby'        => $orderby,
-		'order'          => $order,
-		'post_status'    => 'publish',
+	$query_args = all_menu_build_query_args(
+		$post_type,
+		$posts_per_page,
+		$paged,
+		$orderby,
+		$order,
+		$taxonomy,
+		$term
 	);
-
-	// Add taxonomy filter if both taxonomy and term are specified
-	if ( ! empty( $taxonomy ) && ! empty( $term ) ) {
-		$query_args['tax_query'] = array(
-			array(
-				'taxonomy' => $taxonomy,
-				'field'    => 'slug',
-				'terms'    => $term,
-			),
-		);
-	}
 
 	// Execute query
 	$query = new WP_Query( $query_args );
