@@ -44,14 +44,15 @@ Insert this shortcode on your page:
 
 ## Shortcode Parameters
 
-| Parameter        | Default | Description                                                |
-| ---------------- | ------- | ---------------------------------------------------------- |
-| `post_type`      | `post`  | Post type to display (e.g., 'post', 'menu-item')           |
-| `taxonomy`       | ``      | Taxonomy slug to filter by (e.g., 'category', 'menu-type') |
-| `posts_per_page` | `10`    | Number of items to display per page                        |
-| `orderby`        | `date`  | Sort posts by field (e.g., 'date', 'title', 'menu_order')  |
-| `order`          | `DESC`  | Sort direction ('ASC' or 'DESC')                           |
-| `term`           | ``      | Pre-select a specific term by slug (e.g., 'appetizers')    |
+| Parameter           | Default | Description                                                |
+| ------------------- | ------- | ---------------------------------------------------------- |
+| `post_type`         | `post`  | Post type to display (e.g., 'post', 'menu-item')           |
+| `taxonomy`          | ``      | Taxonomy slug to filter by (e.g., 'category', 'menu-type') |
+| `posts_per_page`    | `10`    | Number of items to display per page                        |
+| `orderby`           | `date`  | Sort posts by field (e.g., 'date', 'title', 'menu_order')  |
+| `order`             | `DESC`  | Sort direction ('ASC' or 'DESC')                           |
+| `term`              | ``      | Pre-select a specific term by slug (e.g., 'appetizers')    |
+| `enable_pagination` | `yes`   | Show/hide pagination controls ('yes' or 'no')              |
 
 ## Usage Examples
 
@@ -108,6 +109,104 @@ The plugin displays a loading spinner overlay when users interact with filters o
 - **Purpose:** Provides visual feedback that the page is processing the request
 
 The loading indicator is automatically positioned over the posts container and does not require any configuration.
+
+## Architecture
+
+### Plugin Architecture Summary
+
+Beginning with **version 1.3.0**, the Dynamic Post Filter plugin has been refactored from a monolithic procedural implementation into a **Modular Procedural WordPress Plugin Architecture**. The primary goal of this refactoring was to improve code maintainability, readability, extensibility, and long-term scalability while preserving **100% backward compatibility**.
+
+Unlike the previous architecture, where rendering, querying, AJAX handling, asset management, pagination, and utility logic were implemented within a single large file, the new architecture separates each responsibility into focused, reusable modules. This approach follows WordPress development best practices without introducing unnecessary complexity such as object-oriented frameworks or MVC patterns.
+
+### Architectural Principles
+
+The refactored architecture is based on the following software engineering principles:
+
+**Separation of Concerns (SoC)** – Each module is responsible for a single functional area. Rendering, querying, AJAX processing, asset management, pagination, and helper utilities are isolated from one another, making the code easier to understand and maintain.
+
+**Single Responsibility Principle (SRP)** – Every module has one clearly defined responsibility:
+
+- **Rendering Module** – Generates all HTML output for posts, modals, filters, and UI components
+- **Query Module** – Builds and executes WordPress queries
+- **AJAX Module** – Processes AJAX requests and returns responses
+- **Pagination Module** – Generates pagination controls while preserving filter state
+- **Assets Module** – Registers and enqueues JavaScript, CSS, and localization data
+- **Config Module** – Centralizes configuration values for easy maintenance
+- **Helpers Module** – Contains reusable utility functions shared across the plugin
+
+**Don't Repeat Yourself (DRY)** – Previously duplicated logic has been extracted into reusable helper functions. This ensures that future updates only need to be made in a single location.
+
+**Modular Design** – The plugin has been organized into independent modules that communicate through clearly defined helper functions. This makes future enhancements significantly easier while reducing the risk of unintended side effects.
+
+### Architectural Flow
+
+```
+Shortcode Registration
+        │
+        ▼
+Shortcode Controller
+        │
+        ▼
+Query Builder
+        │
+        ▼
+WordPress WP_Query
+        │
+        ▼
+Rendering Module
+        │
+        ├── Filter Buttons
+        ├── Mobile Dropdown
+        ├── Post Cards
+        ├── Modal Windows
+        └── Pagination
+        │
+        ▼
+Final HTML Output
+```
+
+For AJAX requests:
+
+```
+JavaScript
+        │
+        ▼
+AJAX Endpoint
+        │
+        ▼
+Query Builder
+        │
+        ▼
+Rendering Module
+        │
+        ▼
+JSON Response
+```
+
+Both the shortcode and AJAX handler reuse the same rendering and query logic, ensuring consistent output across server-side rendering and asynchronous updates.
+
+### Benefits of the New Architecture
+
+- Eliminates duplicated code through reusable helper functions
+- Improves readability by separating responsibilities into dedicated modules
+- Simplifies future maintenance and debugging
+- Makes new features easier to implement without affecting existing functionality
+- Promotes code reuse across shortcodes and AJAX handlers
+- Maintains full backward compatibility with existing shortcodes, AJAX endpoints, HTML structure, CSS classes, and JavaScript behavior
+- Aligns with WordPress Coding Standards while remaining lightweight and procedural
+
+### Compatibility
+
+This architectural refactoring introduces **no breaking changes**. Existing implementations continue to function exactly as before:
+
+- ✅ Shortcodes remain unchanged
+- ✅ AJAX actions remain unchanged
+- ✅ HTML markup remains unchanged
+- ✅ CSS class names remain unchanged
+- ✅ JavaScript behavior remains unchanged
+- ✅ Pagination behavior remains unchanged
+- ✅ URL state management remains unchanged
+- ✅ Database schema remains unchanged
 
 ## Customization Guide
 
@@ -239,14 +338,23 @@ add_filter( 'rocket_cache_reject_uri', function( $rejected_uris ) {
 ## File Structure
 
 ```
-all-menu-filter/
-├── all-menu-filter.php          # Main plugin file
+dynamic-post-filter/
+├── all-menu-filter.php           # Main plugin file with entry point
 ├── includes/
-│   └── shortcode.php            # Shortcode logic & AJAX handlers
+│   ├── config.php                # Configuration values and URLs
+│   ├── helpers.php               # Data access layer and utility functions
+│   ├── query.php                 # WordPress query builder
+│   ├── render.php                # HTML rendering functions
+│   ├── pagination.php            # Pagination control generation
+│   ├── assets.php                # Script and style enqueuing
+│   ├── ajax.php                  # AJAX request handler
+│   └── shortcode.php             # Shortcode registration and orchestration
 ├── js/
-│   └── all-menu-filter.js       # Frontend JavaScript
-├── readme.txt                   # Plugin readme
-└── README.md                    # This file
+│   └── all-menu-filter.js        # Frontend JavaScript
+├── css/
+│   └── all-menu-filter.css       # Plugin styles
+├── readme.txt                    # Plugin readme (WordPress.org)
+└── README.md                     # This file
 ```
 
 ## Troubleshooting
@@ -302,10 +410,45 @@ For issues, feature requests, or contributions, please visit the GitHub reposito
 
 ---
 
-**Version:** 1.1.0  
-**Last Updated:** 2026-06-10
+**Version:** 1.4.0  
+**Last Updated:** 2026-07-24
 
 ## Changelog
+
+### v1.4.0
+
+**Optional Pagination Control**
+
+- Added `enable_pagination` shortcode attribute to optionally disable pagination controls
+- Pagination control now independent from `posts_per_page` setting
+- All filter, modal, and sorting functionality unaffected
+- Fully backward compatible (defaults to 'yes')
+
+**Usage:**
+
+```
+[all-menu post_type="post" taxonomy="category" enable_pagination="no"]
+```
+
+### v1.3.0
+
+**Modular Refactoring - Complete Code Organization**
+
+- Refactored from 970-line monolithic file into 7 focused modules
+- Created modular procedural architecture following WordPress best practices
+- Implemented Single Responsibility Principle across all modules
+- 100% backward compatible with all existing shortcodes and AJAX endpoints
+- No changes to HTML output, CSS classes, or JavaScript behavior
+
+**Modules Added:**
+
+- `includes/config.php` - Configuration values and URLs
+- `includes/helpers.php` - Data access and utility functions
+- `includes/query.php` - WordPress query builder
+- `includes/render.php` - HTML rendering functions
+- `includes/pagination.php` - Pagination control generation
+- `includes/assets.php` - Script and style enqueuing
+- `includes/ajax.php` - AJAX request handling
 
 ### v1.1.0
 
