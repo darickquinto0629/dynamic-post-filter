@@ -13,6 +13,95 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_shortcode( 'all-menu', 'all_menu_callback' );
 
 /**
+ * Render a single post item HTML
+ *
+ * @param int $post_id Post ID
+ * @param string $featured_image_url Featured image URL
+ * @param string $modal_id Modal identifier
+ * @param string $starting_at Starting price field value
+ * @return string Post item HTML
+ */
+function all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at ) {
+	$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
+	
+	$html = '<li class="post-item">';
+	$html .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
+	$html .= '<div class="featured-content">';
+	$html .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
+	$html .= '<p class="excerpt">' . wp_trim_words( $excerpt, 7, '...' ) . '</p>';
+	$html .= '<div class="dashed-line"></div>';
+	$html .= '<div class="fc-bottom">';
+	
+	if ( $starting_at ) {
+		$html .= '<div><p class="ddc-font">Starting at <span class="sp-font color-rust">$' . esc_html( $starting_at ) . '</span></p></div>';
+	}
+	
+	$html .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>';
+	$html .= '</div>';
+	$html .= '</div>';
+	$html .= '</li>';
+	
+	return $html;
+}
+
+/**
+ * Render price section with repeater loop and order-now button
+ *
+ * @param int $post_id Post ID
+ * @return string Price section HTML
+ */
+function all_menu_render_price_section( $post_id ) {
+	$html = '';
+	
+	// Check rows exists.
+	if( have_rows('prices', $post_id) ):
+		$html .= '<div class="price-item">';
+		$html .= '<div>';
+		
+		// Loop through rows.
+		while( have_rows('prices', $post_id) ) : the_row();
+			// Load sub field value.
+			$details = get_sub_field('details');
+			$price = get_sub_field('price');
+			
+			$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
+			$html .= '<p class="ddc-font">' .  $details . $price_display . '</p>';
+		endwhile;
+		
+		$html .= '</div>';
+		$html .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
+		$html .= '</div>';
+	else :
+		$html .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
+	endif;
+	
+	return $html;
+}
+
+/**
+ * Render modal HTML for a post
+ *
+ * @param int $post_id Post ID
+ * @param string $featured_image_url Featured image URL
+ * @param string $modal_id Modal identifier
+ * @return string Modal HTML
+ */
+function all_menu_render_modal( $post_id, $featured_image_url, $modal_id ) {
+	$html = '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
+	$html .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
+	$html .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';
+	$html .= '<div class="lity-modal-content">';
+	$html .= '<h3 class="ddc-font">' . get_the_title( $post_id ) . '</h3>';
+	$html .= '<p class="modal-p">' . get_the_content( null, false, $post_id ) . '</p>';
+	$html .= '<div class="dashed-line"></div>';
+	$html .= all_menu_render_price_section( $post_id );
+	$html .= '</div>';
+	$html .= '</div>';
+	
+	return $html;
+}
+
+/**
  * Shortcode callback for [all-menu]
  * 
  * PRIMARY RESPONSIBILITY:
@@ -275,64 +364,8 @@ if ( ! empty( $atts['taxonomy'] ) ) {
 			// Create modal ID for this post
 			$modal_id = 'post-modal-' . $post_id;
 			
-			$output .= '<li class="post-item">';
-			$output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
-			$output .= '<div class="featured-content">';
-			$output .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
-		$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
-		$output .= '<p class="excerpt">' . wp_trim_words( $excerpt, 7, '...' ) . '</p>';
-		$output .= '<div class="dashed-line"></div>';
-		$output .= '<div class="fc-bottom">';
-		
-		if ( $starting_at ) {
-			$output .= '<div><p class="ddc-font">Starting at <span class="sp-font color-rust">$' . esc_html( $starting_at ) . '</span></p></div>';
-		}
-			
-			$output .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>';
-			$output .= '</div>';
-			$output .= '</div>';
-			$output .= '</li>';
-			
-			// Collect modal content (place outside <ul> for valid HTML)
-    		$modals_output .= '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
-    		$modals_output .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
-    		$modals_output .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';
-    		$modals_output .= '<div class="lity-modal-content">';
-    		$modals_output .= '<h3 class="ddc-font">' . get_the_title( $post->ID ) . '</h3>';
-    		$modals_output .= '<p class="modal-p">' . get_the_content( null, false, $post->ID ) . '</p>';
-    	    $modals_output .= '<div class="dashed-line"></div>';
-    	    
-				// Check rows exists.
-				if( have_rows('prices', $post->ID) ):
-					$modals_output .= '<div class="price-item">';
-
-						$modals_output .= '<div>';
-							// Loop through rows.
-							while( have_rows('prices', $post->ID) ) : the_row();
-
-								// Load sub field value.
-								$details = get_sub_field('details');
-								$price = get_sub_field('price');
-								
-						$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
-						$modals_output .= '<p class="ddc-font">' .  $details . $price_display . '</p>';
-
-						// End loop.
-						endwhile;
-					$modals_output .= '</div>';
-
-					$modals_output .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
-
-
-					$modals_output .= '</div>';
-				
-				// No value.
-				else :
-						$modals_output .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
-				endif;	    
-    	    
-			$modals_output .= '</div>';
-			$modals_output .= '</div>';
+			$output .= all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at );
+			$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
 		}
 	} else {
 		$output .= '<li><p>No posts found.</p></li>';
@@ -482,84 +515,33 @@ function all_menu_filter_ajax() {
 			// Create modal ID for this post
 			$modal_id = 'post-modal-' . $post_id;
 			
-			$posts_output .= '<li class="post-item">';
-			$posts_output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
-			$posts_output .= '<div class="featured-content">';
-			$posts_output .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
-		$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
-		$posts_output .= '<p class="excerpt">' . wp_trim_words( $excerpt, 7, '...' ) . '</p>';
-		$posts_output .= '<div class="dashed-line"></div>';
-		$posts_output .= '<div class="fc-bottom">';
-		
-		if ( $starting_at ) {
-			$posts_output .= '<div><p class="ddc-font">Starting at <span class="sp-font color-rust">$' . esc_html( $starting_at ) . '</span></p></div>';
-		}
-			
-			$posts_output .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>';
-			$posts_output .= '</div>';
-			$posts_output .= '</div>';
-			$posts_output .= '</li>';
-			
-			// Collect modal content separately
-    		$modals_output .= '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
-    		$modals_output .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
-    		$modals_output .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';		
-    		$modals_output .= '<div class="lity-modal-content">';
-    		$modals_output .= '<h3 class="ddc-font">' . get_the_title( $post->ID ) . '</h3>';
-			$modals_output .= '<p class="modal-p">' . get_the_content( null, false, $post->ID ) . '</p>';
-			$modals_output .= '<div class="dashed-line"></div>';
-
-			// Check rows exists.
-			if( have_rows('prices', $post_id) ):
-				$modals_output .= '<div class="price-item">';
-
-					$modals_output .= '<div>';
-						// Loop through rows.
-						while( have_rows('prices', $post_id) ) : the_row();
-
-							// Load sub field value.
-							$details = get_sub_field('details');
-							$price = get_sub_field('price');
-							
-							$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
-						$modals_output .= '<p class="ddc-font">' . $details . $price_display . '</p>';
-
-					// End loop.
-					endwhile;
-				$modals_output .= '</div>';	
-
-			// No value.
-			else :
-						$modals_output .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
-			endif;	
-
-			$modals_output .= '</div>';
-			$modals_output .= '</div>';
-		}
-	} else {
-		$posts_output .= '<li><p>No posts found.</p></li>';
+		$posts_output .= all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at );
+		$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
 	}
+} else {
+	$posts_output .= '<li><p>No posts found.</p></li>';
+}
 
-	wp_reset_postdata();
+wp_reset_postdata();
 
-	// Generate pagination HTML
-	$pagination_html = '';
-	if ( intval( $posts_per_page ) > 0 ) {
-		$pagination_html = all_menu_get_pagination( $query, array(
-			'post_type'      => $post_type,
-			'posts_per_page' => $posts_per_page,
-			'orderby'        => $orderby,
-			'order'          => $order,
-			'taxonomy'       => $taxonomy,
-			'term'           => $term,
-		), isset( $_POST['unique_id'] ) ? sanitize_text_field( $_POST['unique_id'] ) : '' );
-	}
+// Generate pagination HTML
+$pagination_html = '';
+if ( intval( $posts_per_page ) > 0 ) {
+	$pagination_html = all_menu_get_pagination( $query, array(
+		'post_type'      => $post_type,
+		'posts_per_page' => $posts_per_page,
+		'orderby'        => $orderby,
+		'order'          => $order,
+		'taxonomy'       => $taxonomy,
+		'term'           => $term,
+	), isset( $_POST['unique_id'] ) ? sanitize_text_field( $_POST['unique_id'] ) : '' );
+}
 
-	wp_send_json_success( array(
-		'posts'      => $posts_output,
-		'modals'     => $modals_output,
-		'pagination' => $pagination_html,
-	) );
+wp_send_json_success( array(
+	'posts'      => $posts_output,
+	'modals'     => $modals_output,
+	'pagination' => $pagination_html,
+) );
 }
 
 /**
