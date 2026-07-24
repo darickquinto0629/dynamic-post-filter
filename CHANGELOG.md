@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
 
+### Phase 5: Centralize Asset Loading
+
+#### Added
+
+- **Asset Enqueuing Function** (`includes/shortcode.php`)
+  - `all_menu_enqueue_assets()` — Centralized asset loading for scripts and styles
+
+#### Changed
+
+- **Refactored Asset Loading**
+  - `all_menu_callback()` now calls `all_menu_enqueue_assets()` instead of inline enqueuing
+  - jQuery enqueue consolidated
+  - Plugin scripts and styles enqueue consolidated
+  - Lity library enqueue consolidated
+  - Script localization consolidated
+  - Single source of truth for asset loading
+
+#### Technical Details (Phase 5)
+
+- **Asset Dependencies:** jQuery → all-menu-filter script (ordered correctly)
+- **Lity CDN:** Version 2.4.1 loaded via jsDelivr
+- **Script Localization:** all_menu_nonce created and passed via all_menu_data object
+- **Enqueue Point:** Early in callback to ensure assets available before rendering
+- **Commented CSS:** all-menu-filter.css remains commented (inline styling used)
+- **Code Reduction:** 40+ lines of enqueue code removed from callback
+- **Zero Output Change:** Asset loading unchanged, HTML output identical
+- **Backward Compatibility:** 100% compatible with existing functionality
+
+#### Testing (Phase 5)
+
+- ✅ Network tab shows jQuery loaded
+- ✅ Network tab shows lity library loaded
+- ✅ Network tab shows plugin JS loaded
+- ✅ Network tab shows lity CSS loaded
+- ✅ No duplicate asset loading
+- ✅ All scripts load in correct order
+- ✅ AJAX nonce properly localized
+- ✅ No console errors
+
+### Files Modified (Phase 5)
+
+- `includes/shortcode.php` — Added 1 asset enqueuing helper, refactored callback
+
+---
+
 ### Phase 4: Extract UI Components
 
 #### Added
