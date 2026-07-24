@@ -5,7 +5,63 @@ All notable changes to the Dynamic Post Filter plugin are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
+## [1.4.0] — 2026-07-24 — Optional Pagination Control
+
+### Added
+
+- **New Shortcode Attribute: `enable_pagination`**
+  - Values: `'yes'` (default) or `'no'`
+  - Controls whether pagination buttons display
+  - Independent of `posts_per_page` setting
+  - Backward compatible (defaults to enabled)
+
+#### Usage Examples
+
+```php
+[all-menu enable_pagination='yes']    # Pagination ENABLED (default)
+[all-menu enable_pagination='no']     # Pagination DISABLED
+[all-menu posts_per_page='12' enable_pagination='no']  # Show 12, no pagination
+```
+
+#### Technical Details
+
+- **Shortcode Attribute:** `enable_pagination` added to `shortcode_atts()` in `includes/shortcode.php`
+- **Data Attribute Propagation:** Value passed to filter buttons, dropdowns, pagination buttons via `data-enable-pagination="yes|no"`
+- **JavaScript Extraction:** `getButtonData()` extracts flag from button data attributes, sends to AJAX
+- **AJAX Handling:** `all_menu_filter_ajax()` conditionally generates pagination based on flag
+- **AJAX Response:** Pagination HTML returns empty string when disabled (no change to UI)
+- **Initial Load:** Shortcode callback respects flag on initial page render
+
+#### Code Changes
+
+- `includes/shortcode.php` — Added `enable_pagination` to attributes, added conditional check before pagination render
+- `includes/render.php` — Added `data-enable-pagination` attribute to filter buttons, dropdown, pagination buttons
+- `includes/ajax.php` — Extract and sanitize `enable_pagination` from POST, conditionally render pagination
+- `js/all-menu-filter.js` — Extract `enablePagination` from button data, pass to AJAX
+- `PAGINATION_CONTROL.md` — Complete documentation with usage, code flow, troubleshooting
+
+#### Testing
+
+- ✅ Pagination enabled (default) - shows pagination buttons
+- ✅ Pagination disabled - no pagination buttons rendered
+- ✅ Filter buttons with pagination disabled - AJAX respects setting
+- ✅ Dropdown with pagination disabled - AJAX respects setting
+- ✅ Pagination buttons with pagination disabled - buttons not generated
+- ✅ AJAX response empty pagination string - DOM updated correctly
+- ✅ Backward compatible - existing shortcodes work unchanged
+- ✅ No breaking changes - filters, modals, sorting unaffected
+
+#### Properties
+
+- **Independent Control:** Toggle pagination without changing post limits
+- **AJAX-Aware:** Setting persists across filter changes
+- **Non-Breaking:** Pagination toggle separate from posts_per_page
+- **Backward Compatible:** Defaults to 'yes' (preserves existing behavior)
+- **Security:** Input sanitized, case-insensitive comparison
+
+---
+
+## [1.3.0] — 2026-07-24 — Refactoring: Code Organization (8 Phases Complete)
 
 ### Phase 8: Organize Plugin Into Modular Files ⚠️ FINAL
 
