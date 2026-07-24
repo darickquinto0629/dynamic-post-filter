@@ -10,6 +10,70 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// ========================================
+// CONFIGURATION HELPERS
+// ========================================
+
+/**
+ * Get Order Now URL for GQ BBQ
+ *
+ * @return string Order experience URL with tracking parameters
+ */
+function all_menu_get_order_url() {
+	return 'https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA..';
+}
+
+/**
+ * Get fallback featured image URL
+ *
+ * @return string Fallback image URL for missing post thumbnails
+ */
+function all_menu_get_fallback_image() {
+	return '/wp-content/uploads/2026/06/beef-brisket.jpg';
+}
+
+/**
+ * Get add/plus icon SVG path
+ *
+ * @return string Plus icon SVG URL for modal trigger
+ */
+function all_menu_get_add_icon() {
+	return '/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg';
+}
+
+/**
+ * Get close button icon SVG path
+ *
+ * @return string Close button SVG URL for modal close
+ */
+function all_menu_get_close_icon() {
+	return '/wp-content/uploads/2026/06/close-button.svg';
+}
+
+/**
+ * Get catering page URL
+ *
+ * @return string Catering page link
+ */
+function all_menu_get_catering_url() {
+	return 'https://gquebbq.com/catering-bbq/';
+}
+
+/**
+ * Get custom taxonomy sort order
+ *
+ * @return array Ordered array of taxonomy term slugs
+ */
+function all_menu_get_custom_taxonomy_order() {
+	return array(
+		'bbq',
+		'sandwiches',
+		'sides',
+		'desserts',
+		'drinks',
+	);
+}
+
 add_shortcode( 'all-menu', 'all_menu_callback' );
 
 /**
@@ -20,7 +84,7 @@ add_shortcode( 'all-menu', 'all_menu_callback' );
  */
 function all_menu_get_featured_image( $post_id ) {
 	$featured_image_url = get_the_post_thumbnail_url( $post_id, 'medium_large' );
-	$fallback_image_url = '/wp-content/uploads/2026/06/beef-brisket.jpg';
+	$fallback_image_url = all_menu_get_fallback_image();
 	return $featured_image_url ? $featured_image_url : $fallback_image_url;
 }
 
@@ -61,13 +125,7 @@ function all_menu_get_starting_price( $post_id ) {
  * @return array Sorted terms
  */
 function all_menu_sort_terms( $terms ) {
-	$custom_order = array(
-		'bbq',
-		'sandwiches',
-		'sides',
-		'desserts',
-		'drinks',
-	);
+	$custom_order = all_menu_get_custom_taxonomy_order();
 
 	usort( $terms, function( $a, $b ) use ( $custom_order ) {
 		$a_pos = array_search( $a->slug, $custom_order );
@@ -112,7 +170,7 @@ function all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starti
 		$html .= '<div><p class="ddc-font">Starting at <span class="sp-font color-rust">$' . esc_html( $starting_at ) . '</span></p></div>';
 	}
 	
-	$html .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>';
+	$html .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="' . esc_url( all_menu_get_add_icon() ) . '" /></a>';
 	$html .= '</div>';
 	$html .= '</div>';
 	$html .= '</li>';
@@ -128,6 +186,7 @@ function all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starti
  */
 function all_menu_render_price_section( $post_id ) {
 	$html = '';
+	$order_url = all_menu_get_order_url();
 	
 	// Check rows exists.
 	if( have_rows('prices', $post_id) ):
@@ -145,10 +204,10 @@ function all_menu_render_price_section( $post_id ) {
 		endwhile;
 		
 		$html .= '</div>';
-		$html .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
+		$html .= '<div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div>';
 		$html .= '</div>';
 	else :
-		$html .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
+		$html .= '<div class="price-item no-details"><div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div></div>';
 	endif;
 	
 	return $html;
@@ -164,7 +223,7 @@ function all_menu_render_price_section( $post_id ) {
  */
 function all_menu_render_modal( $post_id, $featured_image_url, $modal_id ) {
 	$html = '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
-	$html .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
+	$html .= '<button class="lity-close" data-lity-close><img src="' . esc_url( all_menu_get_close_icon() ) . '" /></button>';
 	$html .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';
 	$html .= '<div class="lity-modal-content">';
 	$html .= '<h3 class="ddc-font">' . get_the_title( $post_id ) . '</h3>';
@@ -295,7 +354,7 @@ function all_menu_render_filters( $atts, $terms, $unique_id ) {
 		$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $term->name ) . '</button>';
 	}
 
-	$html .= '<a class="all-menu-filter-btn catering-btn" href="https://gquebbq.com/catering-bbq/" target="_blank">Catering</a>';
+	$html .= '<a class="all-menu-filter-btn catering-btn" href="' . esc_url( all_menu_get_catering_url() ) . '" target="_blank">Catering</a>';
 	$html .= '</div>';
 
 	return $html;
@@ -318,7 +377,7 @@ function all_menu_render_dropdown( $atts, $terms, $unique_id ) {
 		$html .= '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . ' data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '">' . esc_html( $term->name ) . '</option>';
 	}
 	
-	$html .= '<option value="catering">Catering</option>';
+	$html .= '<option value="catering" data-url="' . esc_url( all_menu_get_catering_url() ) . '">Catering</option>';
 	$html .= '</select>';
 
 	return $html;
@@ -841,13 +900,14 @@ if( $featured_posts ):
                           <p class="ddc-font">Starting at <span class="sp-font color-rust">$<?php echo esc_html( $starting_price ); ?></span></p>
                       </div>
                   <?php endif; ?>
-                  <a class="plus-icon" href="javascript:void(0)" data-modal-id="<?php echo esc_attr( all_menu_get_modal_id( $post->ID ) ); ?>"><img src="/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg" /></a>
+                  <a class="plus-icon" href="javascript:void(0)" data-modal-id="<?php echo esc_attr( all_menu_get_modal_id( $post->ID ) ); ?>"><img src="<?php echo esc_url( all_menu_get_add_icon() ); ?>" /></a>
               </div>
               <?php 
               // Generate modal for this post
               $modal_id = all_menu_get_modal_id( $post->ID );
+              $order_url = all_menu_get_order_url();
 				$modals_output .= '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
-				$modals_output .= '<button class="lity-close" data-lity-close><img src="/wp-content/uploads/2026/06/close-button.svg" /></button>';
+				$modals_output .= '<button class="lity-close" data-lity-close><img src="' . esc_url( all_menu_get_close_icon() ) . '" /></button>';
 				$modals_output .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';		
 				$modals_output .= '<div class="lity-modal-content">';
 				$modals_output .= '<h3 class="ddc-font">' . get_the_title( $post->ID ) . '</h3>';
@@ -873,13 +933,13 @@ if( $featured_posts ):
 							endwhile;
 						$modals_output .= '</div>';
 
-						$modals_output .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
+						$modals_output .= '<div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div>';
 
 					$modals_output .= '</div>';
 				
 				// No value.
 				else :
-						$modals_output .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
+						$modals_output .= '<div class="price-item no-details"><div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div></div>';
 				endif;
 				
 				$modals_output .= '</div>';

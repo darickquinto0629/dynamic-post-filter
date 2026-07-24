@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
 
+### Phase 7: Centralize Configuration Values
+
+#### Added
+
+- **Configuration Helpers** (`includes/shortcode.php`)
+  - `all_menu_get_order_url()` — Order experience URL
+  - `all_menu_get_fallback_image()` — Default featured image
+  - `all_menu_get_add_icon()` — Plus icon SVG path
+  - `all_menu_get_close_icon()` — Modal close button SVG path
+  - `all_menu_get_catering_url()` — Catering page link
+  - `all_menu_get_custom_taxonomy_order()` — Menu category sort order
+
+#### Changed
+
+- **Refactored Hardcoded Values**
+  - `all_menu_get_featured_image()` uses `all_menu_get_fallback_image()`
+  - `all_menu_render_post()` uses `all_menu_get_add_icon()` and `all_menu_get_order_url()`
+  - `all_menu_render_price_section()` uses `all_menu_get_order_url()`
+  - `all_menu_render_filters()` uses `all_menu_get_catering_url()` and `all_menu_get_order_url()`
+  - `all_menu_render_dropdown()` uses `all_menu_get_catering_url()` and `all_menu_get_order_url()`
+  - `all_menu_render_modal()` uses `all_menu_get_close_icon()`
+  - `all_menu_sort_terms()` uses `all_menu_get_custom_taxonomy_order()`
+  - `featured_callback()` uses configuration helpers
+
+#### Technical Details (Phase 7)
+
+- **Single Source of Truth:** All configuration values centralized in helper functions
+- **Easy Maintenance:** Update URLs or image paths in one place only
+- **Configuration Values Extracted:**
+  - Order URL: GQ BBQ order platform (long URL with tracking params)
+  - Fallback Image: Default featured image for missing thumbnails
+  - Add Icon: Plus icon SVG for modal trigger
+  - Close Icon: X button SVG for modal close
+  - Catering URL: GQBBQ catering page
+  - Taxonomy Order: Custom sort order (bbq, sandwiches, sides, desserts, drinks)
+- **Zero Output Change:** HTML output identical
+- **Backward Compatibility:** 100% compatible with existing functionality
+- **Zero Logic Changes:** Pure configuration extraction
+
+#### Testing (Phase 7)
+
+- ✅ Featured images display (uses fallback correctly)
+- ✅ Add icons appear on posts (modal trigger working)
+- ✅ Close button works (modal closing)
+- ✅ Order Now buttons functional (URL correct)
+- ✅ Catering button/link functional (URL correct)
+- ✅ Filter buttons in custom order (bbq, sandwiches, sides, desserts, drinks)
+
+### Files Modified (Phase 7)
+
+- `includes/shortcode.php` — Added 6 configuration helpers, refactored all callsites
+
+---
+
 ### Phase 6: Simplify Pagination Rendering
 
 #### Changed
