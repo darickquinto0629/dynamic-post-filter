@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] — 2026-07-24 — Refactoring: Rendering & Data Access Helpers
 
+### Phase 8: Organize Plugin Into Modular Files ⚠️ FINAL
+
+#### Changed
+
+- **File Structure Refactoring** (`includes/` directory)
+  - Separated monolithic `shortcode.php` into 7 modular files
+  - Each file has single responsibility
+  - All helpers maintained, zero functionality change
+  - Dependencies managed via `require_once()` in main file
+
+#### Files Created (Phase 8)
+
+- `includes/config.php` — Configuration helpers (6 functions)
+  - `all_menu_get_order_url()` / `all_menu_get_fallback_image()` / etc.
+- `includes/helpers.php` — Data access helpers (5 functions)
+  - `all_menu_get_featured_image()` / `all_menu_get_excerpt()` / etc.
+- `includes/render.php` — Rendering helpers (9 functions)
+  - `all_menu_render_post()` / `all_menu_render_modal()` / etc.
+- `includes/query.php` — Query builder (1 function)
+  - `all_menu_build_query_args()`
+- `includes/pagination.php` — Pagination helpers (2 functions)
+  - `all_menu_get_pagination()` / `_all_menu_render_page_button()`
+- `includes/assets.php` — Asset enqueuing (1 function)
+  - `all_menu_enqueue_assets()`
+- `includes/ajax.php` — AJAX handler (1 function)
+  - `all_menu_filter_ajax()`
+- `includes/shortcode.php` — Main callbacks + requires (2 functions)
+  - `all_menu_callback()` / `featured_callback()`
+  - Requires all 7 helper files in correct dependency order
+
+#### Technical Details (Phase 8)
+
+- **Load Order:** Enforced via `require_once()` in shortcode.php (main file):
+  1. config.php (no dependencies)
+  2. helpers.php (depends on config)
+  3. render.php (depends on config, helpers)
+  4. query.php (no dependencies)
+  5. pagination.php (no dependencies)
+  6. assets.php (WordPress functions only)
+  7. ajax.php (depends on helpers, render, query, pagination)
+  8. Main callbacks (depends on all helpers)
+- **Zero Functionality Change:** All code identical, only reorganized
+- **100% Backward Compatible:** Output identical, behavior identical
+- **Maintainability:** Single responsibility principle (each file one concern)
+
+#### Testing (Phase 8)
+
+- ✅ All files load correctly (no missing functions)
+- ✅ Dependencies load in correct order
+- ✅ Featured images display (fallback working)
+- ✅ Add icons appear on posts
+- ✅ Close button works on modals
+- ✅ Order Now buttons functional
+- ✅ Catering buttons work
+- ✅ Filter buttons in custom order
+- ✅ Mobile dropdown works
+- ✅ Desktop filters work
+- ✅ Pagination buttons work
+- ✅ AJAX filtering works
+- ✅ Empty state displays correctly
+- ✅ Featured slider works
+
+### Files Modified (Phase 8)
+
+- `includes/config.php` — NEW
+- `includes/helpers.php` — NEW
+- `includes/render.php` — NEW
+- `includes/query.php` — NEW
+- `includes/pagination.php` — NEW
+- `includes/assets.php` — NEW
+- `includes/ajax.php` — NEW
+- `includes/shortcode.php` — REFACTORED (requires all files)
+
+---
+
 ### Phase 7: Centralize Configuration Values
 
 #### Added

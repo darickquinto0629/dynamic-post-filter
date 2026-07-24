@@ -1,6 +1,9 @@
 <?php
 /**
- * Dynamic Post Filter Shortcode
+ * Dynamic Post Filter - Shortcode Orchestrator
+ *
+ * Main entry point for the plugin. Loads all modular components and registers shortcodes.
+ * This file should be included in the main plugin file (all-menu-filter.php).
  *
  * @package Dynamic_Post_Filter
  */
@@ -11,481 +14,48 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ========================================
-// CONFIGURATION HELPERS
+// LOAD MODULAR COMPONENTS
+// ========================================
+// Dependencies are loaded in order to ensure functions are available
+// when later files need them.
+
+// Configuration: URLs, paths, and settings
+require_once plugin_dir_path( __FILE__ ) . 'config.php';
+
+// Data Access: Post retrieval and ACF field access
+require_once plugin_dir_path( __FILE__ ) . 'helpers.php';
+
+// Rendering: HTML generation for posts, modals, filters, etc.
+require_once plugin_dir_path( __FILE__ ) . 'render.php';
+
+// Query: WP_Query argument assembly
+require_once plugin_dir_path( __FILE__ ) . 'query.php';
+
+// Pagination: Page navigation controls
+require_once plugin_dir_path( __FILE__ ) . 'pagination.php';
+
+// Assets: Script and style enqueuing
+require_once plugin_dir_path( __FILE__ ) . 'assets.php';
+
+// AJAX: Dynamic filtering and pagination
+require_once plugin_dir_path( __FILE__ ) . 'ajax.php';
+
+// ========================================
+// SHORTCODE REGISTRATION & CALLBACKS
 // ========================================
 
 /**
- * Get Order Now URL for GQ BBQ
- *
- * @return string Order experience URL with tracking parameters
+ * Register [all-menu] shortcode
  */
-function all_menu_get_order_url() {
-	return 'https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA..';
-}
-
-/**
- * Get fallback featured image URL
- *
- * @return string Fallback image URL for missing post thumbnails
- */
-function all_menu_get_fallback_image() {
-	return '/wp-content/uploads/2026/06/beef-brisket.jpg';
-}
-
-/**
- * Get add/plus icon SVG path
- *
- * @return string Plus icon SVG URL for modal trigger
- */
-function all_menu_get_add_icon() {
-	return '/wp-content/uploads/2026/06/Add-Circle-Alternate-Streamline-Ultimate.svg';
-}
-
-/**
- * Get close button icon SVG path
- *
- * @return string Close button SVG URL for modal close
- */
-function all_menu_get_close_icon() {
-	return '/wp-content/uploads/2026/06/close-button.svg';
-}
-
-/**
- * Get catering page URL
- *
- * @return string Catering page link
- */
-function all_menu_get_catering_url() {
-	return 'https://gquebbq.com/catering-bbq/';
-}
-
-/**
- * Get custom taxonomy sort order
- *
- * @return array Ordered array of taxonomy term slugs
- */
-function all_menu_get_custom_taxonomy_order() {
-	return array(
-		'bbq',
-		'sandwiches',
-		'sides',
-		'desserts',
-		'drinks',
-	);
-}
-
 add_shortcode( 'all-menu', 'all_menu_callback' );
 
 /**
- * Get featured image URL with fallback
- *
- * @param int $post_id Post ID
- * @return string Featured image URL or fallback
- */
-function all_menu_get_featured_image( $post_id ) {
-	$featured_image_url = get_the_post_thumbnail_url( $post_id, 'medium_large' );
-	$fallback_image_url = all_menu_get_fallback_image();
-	return $featured_image_url ? $featured_image_url : $fallback_image_url;
-}
-
-/**
- * Get post excerpt with fallback to content
- *
- * @param int $post_id Post ID
- * @return string Post excerpt or content
- */
-function all_menu_get_excerpt( $post_id ) {
-	return ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
-}
-
-/**
- * Generate modal ID for a post
- *
- * @param int $post_id Post ID
- * @return string Modal ID (post-modal-{post_id})
- */
-function all_menu_get_modal_id( $post_id ) {
-	return 'post-modal-' . $post_id;
-}
-
-/**
- * Get starting price field for a post
- *
- * @param int $post_id Post ID
- * @return string Starting price value or empty
- */
-function all_menu_get_starting_price( $post_id ) {
-	return get_field( 'starting_at', $post_id );
-}
-
-/**
- * Sort terms by custom menu order
- *
- * @param array $terms Array of term objects
- * @return array Sorted terms
- */
-function all_menu_sort_terms( $terms ) {
-	$custom_order = all_menu_get_custom_taxonomy_order();
-
-	usort( $terms, function( $a, $b ) use ( $custom_order ) {
-		$a_pos = array_search( $a->slug, $custom_order );
-		$b_pos = array_search( $b->slug, $custom_order );
-
-		// Put terms not found in the array at the end
-		if ( $a_pos === false ) {
-			$a_pos = 999;
-		}
-
-		if ( $b_pos === false ) {
-			$b_pos = 999;
-		}
-
-		return $a_pos - $b_pos;
-	} );
-
-	return $terms;
-}
-
-/**
- * Render a single post item HTML
- *
- * @param int $post_id Post ID
- * @param string $featured_image_url Featured image URL
- * @param string $modal_id Modal identifier
- * @param string $starting_at Starting price field value
- * @return string Post item HTML
- */
-function all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at ) {
-	$excerpt = all_menu_get_excerpt( $post_id );
-	
-	$html = '<li class="post-item">';
-	$html .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
-	$html .= '<div class="featured-content">';
-	$html .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
-	$html .= '<p class="excerpt">' . wp_trim_words( $excerpt, 7, '...' ) . '</p>';
-	$html .= '<div class="dashed-line"></div>';
-	$html .= '<div class="fc-bottom">';
-	
-	if ( $starting_at ) {
-		$html .= '<div><p class="ddc-font">Starting at <span class="sp-font color-rust">$' . esc_html( $starting_at ) . '</span></p></div>';
-	}
-	
-	$html .= '<a class="plus-icon" href="javascript:void(0)" data-modal-id="' . esc_attr( $modal_id ) . '"><img src="' . esc_url( all_menu_get_add_icon() ) . '" /></a>';
-	$html .= '</div>';
-	$html .= '</div>';
-	$html .= '</li>';
-	
-	return $html;
-}
-
-/**
- * Render price section with repeater loop and order-now button
- *
- * @param int $post_id Post ID
- * @return string Price section HTML
- */
-function all_menu_render_price_section( $post_id ) {
-	$html = '';
-	$order_url = all_menu_get_order_url();
-	
-	// Check rows exists.
-	if( have_rows('prices', $post_id) ):
-		$html .= '<div class="price-item">';
-		$html .= '<div>';
-		
-		// Loop through rows.
-		while( have_rows('prices', $post_id) ) : the_row();
-			// Load sub field value.
-			$details = get_sub_field('details');
-			$price = get_sub_field('price');
-			
-			$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
-			$html .= '<p class="ddc-font">' .  $details . $price_display . '</p>';
-		endwhile;
-		
-		$html .= '</div>';
-		$html .= '<div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div>';
-		$html .= '</div>';
-	else :
-		$html .= '<div class="price-item no-details"><div><a href="' . esc_url( $order_url ) . '" id="order-now" target="_blank">Order Now</a></div></div>';
-	endif;
-	
-	return $html;
-}
-
-/**
- * Render modal HTML for a post
- *
- * @param int $post_id Post ID
- * @param string $featured_image_url Featured image URL
- * @param string $modal_id Modal identifier
- * @return string Modal HTML
- */
-function all_menu_render_modal( $post_id, $featured_image_url, $modal_id ) {
-	$html = '<div id="' . esc_attr( $modal_id ) . '" class="lity-modal lity-hide">';
-	$html .= '<button class="lity-close" data-lity-close><img src="' . esc_url( all_menu_get_close_icon() ) . '" /></button>';
-	$html .= '<div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div>';
-	$html .= '<div class="lity-modal-content">';
-	$html .= '<h3 class="ddc-font">' . get_the_title( $post_id ) . '</h3>';
-	$html .= '<p class="modal-p">' . get_the_content( null, false, $post_id ) . '</p>';
-	$html .= '<div class="dashed-line"></div>';
-	$html .= all_menu_render_price_section( $post_id );
-	$html .= '</div>';
-	$html .= '</div>';
-	
-	return $html;
-}
-
-/**
- * Build WP_Query arguments array
- *
- * @param string $post_type Post type to query
- * @param int $posts_per_page Posts per page for pagination
- * @param int $paged Current page number (1-based)
- * @param string $orderby Order by field
- * @param string $order Order direction (ASC/DESC)
- * @param string $taxonomy Taxonomy slug for filtering (optional)
- * @param string $term Term slug to filter by (optional)
- * @return array WP_Query arguments
- */
-function all_menu_build_query_args( $post_type, $posts_per_page, $paged, $orderby, $order, $taxonomy = '', $term = '' ) {
-	// Build base query arguments
-	$query_args = array(
-		'post_type'      => $post_type,
-		'posts_per_page' => $posts_per_page,
-		'paged'          => $paged,
-		'orderby'        => $orderby,
-		'order'          => $order,
-		'post_status'    => 'publish',
-	);
-
-	// Add taxonomy filter if both taxonomy and term are specified
-	if ( ! empty( $taxonomy ) && ! empty( $term ) ) {
-		$query_args['tax_query'] = array(
-			array(
-				'taxonomy' => $taxonomy,
-				'field'    => 'slug',
-				'terms'    => $term,
-			),
-		);
-	}
-
-	return $query_args;
-}
-
-/**
- * Enqueue all scripts and styles for the shortcode
- *
- * Centralizes asset loading for jQuery, plugin scripts/styles,
- * Lity 2.4.1 modal library, and script localization.
- *
- * @return void
- */
-function all_menu_enqueue_assets() {
-	// Enqueue jQuery as dependency
-	wp_enqueue_script( 'jquery' );
-
-	// Enqueue plugin JavaScript
-	wp_enqueue_script(
-		'all-menu-filter',
-		ALL_MENU_FILTER_URL . 'js/all-menu-filter.js',
-		array( 'jquery' ),
-		ALL_MENU_FILTER_VERSION,
-		true
-	);
-
-	// Enqueue plugin styles (commented out - using inline styling)
-	// wp_enqueue_style(
-	// 	'all-menu-filter',
-	// 	ALL_MENU_FILTER_URL . 'css/all-menu-filter.css',
-	// 	array(),
-	// 	ALL_MENU_FILTER_VERSION
-	// );
-
-	// Enqueue Lity modal library (only on pages using this shortcode)
-	wp_enqueue_script(
-		'lity',
-		'https://cdn.jsdelivr.net/npm/lity@2.4.1/dist/lity.min.js',
-		array(),
-		'2.4.1',
-		true
-	);
-
-	// Enqueue Lity CSS
-	wp_enqueue_style(
-		'lity',
-		'https://cdn.jsdelivr.net/npm/lity@2.4.1/dist/lity.min.css',
-		array(),
-		'2.4.1'
-	);
-
-	// Localize script with AJAX URL and nonce
-	wp_localize_script(
-		'all-menu-filter',
-		'all_menu_data',
-		array(
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'all_menu_nonce' ),
-		)
-	);
-}
-
-/**
- * Render desktop filter buttons
- *
- * @param array $atts Shortcode attributes
- * @param array $terms Terms for filter buttons
- * @param string $unique_id Unique container ID
- * @return string Filter button HTML or empty string
- */
-function all_menu_render_filters( $atts, $terms, $unique_id ) {
-	if ( empty( $atts['taxonomy'] ) || is_wp_error( $terms ) || count( $terms ) === 0 ) {
-		return '';
-	}
-
-	$html = '<div id="menu-filter-container" class="all-menu-filters">';
-	
-	// Only mark "All Items" as active if no term is pre-selected
-	$active_class_all = empty( $atts['term'] ) ? 'active' : '';
-	$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class_all ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">All Items</button>';
-
-	foreach ( $terms as $term ) {
-		$active_class = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'active' : '';
-		$html .= '<button class="all-menu-filter-btn ' . esc_attr( $active_class ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $term->slug ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $term->name ) . '</button>';
-	}
-
-	$html .= '<a class="all-menu-filter-btn catering-btn" href="' . esc_url( all_menu_get_catering_url() ) . '" target="_blank">Catering</a>';
-	$html .= '</div>';
-
-	return $html;
-}
-
-/**
- * Render mobile filter dropdown
- *
- * @param array $atts Shortcode attributes
- * @param array $terms Terms for dropdown options
- * @param string $unique_id Unique container ID
- * @return string Dropdown HTML
- */
-function all_menu_render_dropdown( $atts, $terms, $unique_id ) {
-	$html = '<select class="menu-filter-dropdown" data-unique-id="' . esc_attr( $unique_id ) . '">';
-	$html .= '<option value="">All Items</option>';
-	
-	foreach ( $terms as $term ) {
-		$selected = ( ! empty( $atts['term'] ) && $atts['term'] === $term->slug ) ? 'selected' : '';
-		$html .= '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . ' data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '">' . esc_html( $term->name ) . '</option>';
-	}
-	
-	$html .= '<option value="catering" data-url="' . esc_url( all_menu_get_catering_url() ) . '">Catering</option>';
-	$html .= '</select>';
-
-	return $html;
-}
-
-/**
- * Render loading spinner indicator
- *
- * @param string $unique_id Unique container ID
- * @return string Loader HTML with spinner
- */
-function all_menu_render_loader( $unique_id ) {
-	$html = '<div class="all-menu-loader" data-loader-id="' . esc_attr( $unique_id ) . '">';
-	$html .= '<div class="all-menu-spinner"></div>';
-	$html .= '</div>';
-
-	return $html;
-}
-
-/**
- * Render posts container wrapper opening
- *
- * @param string $unique_id Unique container ID
- * @param bool $has_url_params Whether URL has filter parameters
- * @return string Posts wrapper opening HTML
- */
-function all_menu_render_posts_wrapper_open( $unique_id, $has_url_params ) {
-	$html = '<div class="all-menu-posts-wrapper">';
-	$html .= all_menu_render_loader( $unique_id );
-	
-	$hidden_class = $has_url_params ? ' amf-hidden-initial' : '';
-	$html .= '<ul id="' . esc_attr( $unique_id ) . '" class="custom-post-loop' . esc_attr( $hidden_class ) . '">';
-
-	return $html;
-}
-
-/**
- * Render posts container wrapper closing
- *
- * @return string Posts wrapper closing HTML
- */
-function all_menu_render_posts_wrapper_close() {
-	return '</ul></div>';
-}
-
-/**
- * Render empty state message
- *
- * @return string Empty state HTML
- */
-function all_menu_render_empty_state() {
-	return '<li><p>No posts found.</p></li>';
-}
-
-/**
- * Shortcode callback for [all-menu]
+ * [all-menu] Shortcode Callback
  * 
- * PRIMARY RESPONSIBILITY:
  * Renders filterable post grid with Lity 2.4.1 lightbox modals and pagination.
- * Handles both server-side rendering on page load and client-side updates via AJAX.
- * 
- * KEY FEATURES:
- * - Filter buttons: Dynamic taxonomy-based filtering with "All Items" option
- * - URL state persistence: Filter selections and pagination preserved in URL
- * - Browser history support: Back/forward navigation works correctly
- * - Lity 2.4.1 modals: Click plus-icon to open lightbox with post details
- * - Excerpt fallback: Uses excerpt or post content if excerpt unavailable
- * - Multi-instance support: Multiple shortcodes can be used on same page
- * 
- * SHORTCODE ATTRIBUTES:
- *  - post_type (string, default: 'post'): Post type to display
- *  - posts_per_page (int, default: 12): Posts per page for pagination
- *  - orderby (string, default: 'date'): Order by field
- *  - order (string, default: 'DESC'): Order direction (ASC/DESC)
- *  - taxonomy (string, default: ''): Taxonomy slug for filter buttons
- *  - term (string, default: ''): Initial term to filter by
- * 
- * USAGE EXAMPLES:
- *  [all-menu post_type="menu" posts_per_page="12" taxonomy="menu-categories"]
- *  [all-menu post_type="post" posts_per_page="9" taxonomy="categories" orderby="title" order="ASC"]
- * 
- * LIGHTBOX INTEGRATION (Lity 2.4.1):
- *  - Library loaded via CDN (2kB gzipped) only on pages with [all-menu] shortcode
- *  - Automatic event delegation for dynamically added elements via AJAX
- *  - Modal ID format: "post-modal-{post_id}" for unique, consistent referencing
- *  - Modal visibility: Uses class="lity-hide" for proper initialization (NOT CSS display:none)
- *  - Scroll preservation: JavaScript captures and restores scroll position on modal close
- *  - Content rendering: Post title + excerpt (up to 20 words) displayed in modal
- * 
- * AJAX WORKFLOW:
- *  1. User clicks filter button or pagination button
- *  2. JavaScript collects filter state and sends AJAX POST request
- *  3. AJAX handler (all_menu_filter_ajax) validates nonce and executes WP_Query
- *  4. Response includes: posts HTML + modals HTML + pagination HTML
- *  5. JavaScript replaces container content with new results
- *  6. Lity automatically recognizes new modals via event delegation (no re-init needed)
- * 
- * TECHNICAL ARCHITECTURE:
- *  - Modals: Rendered in separate variable, inserted AFTER posts wrapper (valid XHTML)
- *  - Filter buttons: Generated from get_terms() for specified taxonomy
- *  - "All Items" button: Empty term shows all posts without taxonomy filtering
- *  - Nonce security: all_menu_nonce used for AJAX verification (prevents CSRF)
- *  - Authentication: Supports both authenticated users (wp_ajax_) and guests (wp_ajax_nopriv_)
- *  - Unique IDs: Each shortcode instance gets unique ID for multi-instance support
- *  - Hidden content: If URL has filter params, initial page content hidden via CSS until AJAX completes
  * 
  * @param array $atts Shortcode attributes
- * @return string HTML output: filter buttons + posts grid + modals + pagination
+ * @return string HTML output
  */
 function all_menu_callback( $atts = array() ) {
 	// Parse shortcode attributes with defaults
@@ -550,17 +120,6 @@ function all_menu_callback( $atts = array() ) {
 	$has_url_params = ! empty( $_GET['amf_post_type'] ) && ! empty( $_GET['amf_taxonomy'] ) ? true : false;
 	$output .= all_menu_render_posts_wrapper_open( $unique_id, $has_url_params );
 
-	// ========================================
-	// POST ITEM TEMPLATE - CUSTOMIZE THIS SECTION
-	// Developers: Modify the HTML structure below to match your design requirements.
-	// All post data (title, excerpt, custom fields, etc.) can be accessed within this loop.
-	//
-	// ⚠️  ACF FIELDS USED IN THIS PROJECT:
-	// This template uses the ACF field 'starting_at' for pricing display.
-	// Your project may use different field names or custom fields.
-	// Update the get_field() calls below with your actual field names/keys.
-	// ========================================
-
 	// Collect modals separately to place them outside the <ul>
 	$modals_output = '';
 
@@ -596,249 +155,13 @@ function all_menu_callback( $atts = array() ) {
 }
 
 // ========================================
-// AJAX HANDLER & HOOK REGISTRATION
+// FEATURED SHORTCODE (Separate Implementation)
 // ========================================
-// Hook into both authenticated and non-authenticated AJAX actions
-// Allows both logged-in users and guests to filter posts
-
-add_action( 'wp_ajax_all_menu_filter', 'all_menu_filter_ajax' );
-add_action( 'wp_ajax_nopriv_all_menu_filter', 'all_menu_filter_ajax' );
 
 /**
- * AJAX Handler for Post Filtering & Pagination
- * 
- * PRIMARY RESPONSIBILITY:
- * Receive filter/pagination parameters from JavaScript, execute filtered WP_Query,
- * render posts and modals, and return complete HTML via JSON response.
- * 
- * SECURITY:
- *  - Nonce verification: Checks wp_verify_nonce() before processing
- *  - Input sanitization: All POST data sanitized with sanitize_text_field() or intval()
- *  - Output escaping: All HTML output escaped with esc_attr(), esc_url(), esc_html()
- *  - Post status: Only queries published posts (post_status = 'publish')
- * 
- * REQUEST PARAMETERS (POST):
- *  - nonce (string): Security token for CSRF protection
- *  - post_type (string): Post type to query
- *  - taxonomy (string): Taxonomy slug for filtering
- *  - term (string): Term slug to filter by (empty for "All Items")
- *  - paged (int): Current page number (1-based)
- *  - orderby (string): Order by field (date, title, etc)
- *  - order (string): Order direction (ASC, DESC)
- *  - posts_per_page (int): Posts per page limit
- *  - unique_id (string): Container ID for reference (used in selector attributes)
- * 
- * RESPONSE FORMAT (JSON):
- *  {
- *    "success": true/false,
- *    "data": {
- *      "posts": "<ul>post items HTML</ul>",
- *      "modals": "<div>lity modals</div>",
- *      "pagination": "<div>pagination buttons</div>"
- *    }
- *  }
- * 
- * WORKFLOW:
- *  1. Verify nonce for security
- *  2. Sanitize and extract POST parameters
- *  3. Build WP_Query arguments with taxonomy tax_query if needed
- *  4. Execute WP_Query
- *  5. Loop through posts: collect posts HTML and modals HTML separately
- *  6. Generate pagination HTML for next/prev/page numbers
- *  7. Return JSON response with all three components
- *  8. JavaScript receives and updates DOM with new content
- *  9. Lity automatically detects new modals via event delegation
- * 
- * IMPORTANT NOTES:
- *  - Posts and modals collected in separate variables (for valid HTML structure)
- *  - Empty term parameter: Queries ALL posts without tax_query filter
- *  - Modal ID format: "post-modal-{post_id}" (matches button data-modal-id)
- *  - Excerpt fallback: Uses get_the_excerpt() with fallback to get_the_content()
- *  - Word trimming: Modal excerpt limited to 20 words for readability
- * 
- * @return void Sends JSON response and exits
+ * Register [featured] shortcode
  */
-function all_menu_filter_ajax() {
-	// Verify security nonce
-	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'all_menu_nonce' ) ) {
-		wp_send_json_error( 'Nonce verification failed' );
-	}
-
-	// Extract and sanitize POST parameters with defaults
-	$post_type      = isset( $_POST['post_type'] ) ? sanitize_text_field( $_POST['post_type'] ) : 'post';
-	$taxonomy       = isset( $_POST['taxonomy'] ) ? sanitize_text_field( $_POST['taxonomy'] ) : '';
-	$term           = isset( $_POST['term'] ) ? sanitize_text_field( $_POST['term'] ) : '';
-	$orderby        = isset( $_POST['orderby'] ) ? sanitize_text_field( $_POST['orderby'] ) : 'date';
-	$order          = isset( $_POST['order'] ) ? sanitize_text_field( $_POST['order'] ) : 'DESC';
-	$posts_per_page = isset( $_POST['posts_per_page'] ) ? intval( $_POST['posts_per_page'] ) : 10;
-	$paged          = isset( $_POST['paged'] ) ? intval( $_POST['paged'] ) : 1;
-
-	// Build query arguments for WP_Query
-	$query_args = all_menu_build_query_args(
-		$post_type,
-		$posts_per_page,
-		$paged,
-		$orderby,
-		$order,
-		$taxonomy,
-		$term
-	);
-
-	// Execute query
-	$query = new WP_Query( $query_args );
-
-	$posts_output = '';
-	$modals_output = '';
-
-	// ========================================
-	// POST ITEM TEMPLATE - CUSTOMIZE THIS SECTION
-	// Developers: Modify the HTML structure below to match your design requirements.
-	// All post data (title, excerpt, custom fields, etc.) can be accessed within this loop.
-	//
-	// ⚠️  ACF FIELDS USED IN THIS PROJECT:
-	// This template uses the ACF field 'starting_at' for pricing display.
-	// Your project may use different field names or custom fields.
-	// Update the get_field() calls below with your actual field names/keys.
-	// ========================================
-
-	if ( $query->have_posts() ) {
-		while ( $query->have_posts() ) {
-			$query->the_post();
-			$post_id = get_the_ID();
-			$featured_image_url = all_menu_get_featured_image( $post_id );
-			$starting_at = all_menu_get_starting_price( $post_id );
-			$modal_id = all_menu_get_modal_id( $post_id );
-			
-		$posts_output .= all_menu_render_post( $post_id, $featured_image_url, $modal_id, $starting_at );
-		$modals_output .= all_menu_render_modal( $post_id, $featured_image_url, $modal_id );
-	}
-} else {
-	$posts_output .= '<li><p>No posts found.</p></li>';
-}
-
-wp_reset_postdata();
-
-// Generate pagination HTML
-$pagination_html = '';
-if ( intval( $posts_per_page ) > 0 ) {
-	$pagination_html = all_menu_get_pagination( $query, array(
-		'post_type'      => $post_type,
-		'posts_per_page' => $posts_per_page,
-		'orderby'        => $orderby,
-		'order'          => $order,
-		'taxonomy'       => $taxonomy,
-		'term'           => $term,
-	), isset( $_POST['unique_id'] ) ? sanitize_text_field( $_POST['unique_id'] ) : '' );
-}
-
-wp_send_json_success( array(
-	'posts'      => $posts_output,
-	'modals'     => $modals_output,
-	'pagination' => $pagination_html,
-) );
-}
-
-/**
- * Generate a pagination button with data attributes (internal helper)
- *
- * Private helper for pagination rendering. Not intended for external use.
- * Builds a single page button with filter parameters for AJAX request.
- *
- * @param int $page_num Page number
- * @param array $atts Shortcode attributes (post_type, taxonomy, term, orderby, order, posts_per_page)
- * @param string $unique_id Unique container ID
- * @param string $label Button label text
- * @return string Button HTML
- */
-function _all_menu_render_page_button( $page_num, $atts, $unique_id, $label ) {
-	return '<button class="all-menu-page-btn" data-page="' . intval( $page_num ) . '" data-post-type="' . esc_attr( $atts['post_type'] ) . '" data-taxonomy="' . esc_attr( $atts['taxonomy'] ) . '" data-term="' . esc_attr( $atts['term'] ) . '" data-orderby="' . esc_attr( $atts['orderby'] ) . '" data-order="' . esc_attr( $atts['order'] ) . '" data-posts-per-page="' . intval( $atts['posts_per_page'] ) . '" data-unique-id="' . esc_attr( $unique_id ) . '">' . esc_html( $label ) . '</button>';
-}
-
-/**
- * Generate pagination HTML with state preservation
- * 
- * Creates previous/page number/next buttons with data attributes
- * for URL state management. Each button includes all filter parameters
- * needed to reconstruct the query.
- * 
- * @param WP_Query $query The query object with pagination data
- * @param array    $atts  The shortcode attributes (post_type, taxonomy, term, etc)
- * @param string   $unique_id The unique ID for the container
- * @return string Pagination HTML, or empty string if only 1 page
- */
-function all_menu_get_pagination( $query, $atts, $unique_id ) {
-	if ( $query->max_num_pages <= 1 ) {
-		return '';
-	}
-
-	$pagination_html = '<div class="all-menu-pagination" data-unique-id="' . esc_attr( $unique_id ) . '">';
-
-	// Previous page link
-	if ( $query->query_vars['paged'] > 1 ) {
-		$prev_page = $query->query_vars['paged'] - 1;
-		$pagination_html .= _all_menu_render_page_button( $prev_page, $atts, $unique_id, 'Prev' );
-	}
-
-	// Page number links with ellipsis for large pagination
-	$current_page = $query->query_vars['paged'];
-	$total_pages = $query->max_num_pages;
-	$range = 2; // Number of pages to show on each side of current page
-	$last_shown = 0;
-
-	for ( $i = 1; $i <= $total_pages; $i++ ) {
-		// Determine which pages to show
-		$show_page = false;
-
-		// Show all pages if total pages is less than 5
-		if ( $total_pages < 5 ) {
-			$show_page = true;
-		}
-		// For 5+ pages, apply ellipsis logic
-		else {
-			// Always show first page
-			if ( $i === 1 ) {
-				$show_page = true;
-			}
-			// Always show last page
-			elseif ( $i === $total_pages ) {
-				$show_page = true;
-			}
-			// Show pages around current page
-			elseif ( $i >= $current_page - $range && $i <= $current_page + $range ) {
-				$show_page = true;
-			}
-		}
-
-		if ( $show_page ) {
-			// Add ellipsis if there's a gap
-			if ( $last_shown > 0 && $i - $last_shown > 1 ) {
-				$pagination_html .= '<span class="all-menu-page-ellipsis">...</span>';
-			}
-
-			if ( $i === $current_page ) {
-				$pagination_html .= '<span class="all-menu-page-num active">' . intval( $i ) . '</span>';
-			} else {
-				$pagination_html .= _all_menu_render_page_button( $i, $atts, $unique_id, $i );
-			}
-
-			$last_shown = $i;
-		}
-	}
-
-	// Next page link
-	if ( $query->query_vars['paged'] < $query->max_num_pages ) {
-		$next_page = $query->query_vars['paged'] + 1;
-		$pagination_html .= _all_menu_render_page_button( $next_page, $atts, $unique_id, 'Next' );
-	}
-
-	$pagination_html .= '</div>';
-	return $pagination_html;
-}
-
-
-// Ignore this. this is not the part of the plugin. this is the featured menu on my GQBBQ site. 
-// Register the 'featured' shortcode and attach it to the callback function
-add_shortcode('featured', 'featured_callback');
+add_shortcode( 'featured', 'featured_callback' );
 function featured_callback() {
     
     wp_enqueue_style(
