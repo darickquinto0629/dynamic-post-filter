@@ -45,14 +45,11 @@ jQuery(document).ready(function ($) {
 
   var scrollPos = 0;
 
-  $(document).on("click", ".plus-icon", function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    scrollPos = $(window).scrollTop();
-
-    // Retrieve modal identifier from data attribute
-    var modalId = $(this).data("modal-id");
+  // Helper function to open modal for both plus-icon and featured-image
+  function openModal(modalId) {
     if (!modalId) return false;
+
+    scrollPos = $(window).scrollTop();
 
     // Create temporary anchor element with Lity data attribute
     // This leverages Lity's automatic event delegation system
@@ -71,6 +68,22 @@ jQuery(document).ready(function ($) {
     }, 50);
 
     return false;
+  }
+
+  $(document).on("click", ".plus-icon", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var modalId = $(this).data("modal-id");
+    openModal(modalId);
+  });
+
+  $(document).on("click", ".menu-featured-image", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var modalId = $(this).data("modal-id");
+    openModal(modalId);
   });
 
   // ========================================
@@ -462,42 +475,36 @@ jQuery(document).ready(function ($) {
     // Fetch paginated results and scroll to top for better UX
     loadFilteredPosts(ajaxData, btnData.uniqueId, { shouldScroll: true });
   });
-  
-// ========================================
-// Make the featured items a slider on mobile. 
-// ======================================== 
-jQuery(function ($) {
 
-    $('.featured-slider').slick({
+  // ========================================
+  // Make the featured items a slider on mobile.
+  // ========================================
+  jQuery(function ($) {
+    $(".featured-slider").slick({
+      mobileFirst: true,
 
-        mobileFirst: true,
+      slidesToShow: 1,
+      slidesToScroll: 1,
 
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        
-        adaptiveHeight: false,
+      adaptiveHeight: false,
 
-        // centerMode: true,
-        // centerPadding: '30px',
+      // centerMode: true,
+      // centerPadding: '30px',
 
-        autoplay: true,
-        autoplaySpeed: 3000,
+      autoplay: true,
+      autoplaySpeed: 3000,
 
-        arrows: false,
-        dots: true,
+      arrows: false,
+      dots: true,
 
-        responsive: [
-            {
-                breakpoint: 767,
-                settings: "unslick"
-            }
-        ]
-
+      responsive: [
+        {
+          breakpoint: 767,
+          settings: "unslick",
+        },
+      ],
     });
-
-});
-  
-  
+  });
 
   // ========================================
   // BROWSER HISTORY HANDLER
@@ -550,28 +557,23 @@ jQuery(function ($) {
   });
 });
 
-
 // Mobile Filter Dropdown Menu
-(function($) {
+(function ($) {
+  $(document).on("change", ".menu-filter-dropdown", function () {
+    const term = $(this).val();
 
-    $(document).on('change', '.menu-filter-dropdown', function() {
+    // Redirect for Catering
+    if (term === "catering") {
+      window.location.href = "https://gquebbq.com/catering-bbq/";
+      return;
+    }
 
-        const term = $(this).val();
+    const $button = $('.all-menu-filter-btn[data-term="' + term + '"]');
 
-        // Redirect for Catering
-        if (term === 'catering') {
-            window.location.href = 'https://gquebbq.com/catering-bbq/';
-            return;
-        }
-
-        const $button = $('.all-menu-filter-btn[data-term="' + term + '"]');
-
-        if ($button.length) {
-            $button.trigger('click');
-        } else {
-            $('.all-menu-filter-btn[data-term=""]').trigger('click');
-        }
-
-    });
-
+    if ($button.length) {
+      $button.trigger("click");
+    } else {
+      $('.all-menu-filter-btn[data-term=""]').trigger("click");
+    }
+  });
 })(jQuery);

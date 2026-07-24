@@ -276,7 +276,7 @@ if ( ! empty( $atts['taxonomy'] ) ) {
 			$modal_id = 'post-modal-' . $post_id;
 			
 			$output .= '<li class="post-item">';
-			$output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
+			$output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
 			$output .= '<div class="featured-content">';
 			$output .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
 		$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
@@ -314,13 +314,14 @@ if ( ! empty( $atts['taxonomy'] ) ) {
 								$details = get_sub_field('details');
 								$price = get_sub_field('price');
 								
-								$modals_output .= '<p class="ddc-font">' .  $details . '<span class="sp-font color-rust">'. esc_html( $price ). '</span></p>';
+						$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
+						$modals_output .= '<p class="ddc-font">' .  $details . $price_display . '</p>';
 
-							// End loop.
-							endwhile;
-						$modals_output .= '</div>';
+						// End loop.
+						endwhile;
+					$modals_output .= '</div>';
 
-						$modals_output .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
+					$modals_output .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
 
 
 					$modals_output .= '</div>';
@@ -482,7 +483,7 @@ function all_menu_filter_ajax() {
 			$modal_id = 'post-modal-' . $post_id;
 			
 			$posts_output .= '<li class="post-item">';
-			$posts_output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
+			$posts_output .= '<div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="' . esc_attr( $modal_id ) . '" style="background-image: url(' . esc_url( $featured_image_url ) . ')"></div></div>';
 			$posts_output .= '<div class="featured-content">';
 			$posts_output .= '<h4 class="ddc-font">' . get_the_title() . '</h4>';
 		$excerpt = ! empty( get_the_excerpt( $post_id ) ) ? get_the_excerpt( $post_id ) : get_the_content( null, false, $post_id );
@@ -520,18 +521,13 @@ function all_menu_filter_ajax() {
 							$details = get_sub_field('details');
 							$price = get_sub_field('price');
 							
-							$modals_output .= '<p class="ddc-font">' . $details . '<span class="sp-font color-rust">'. esc_html( $price ). '</span></p>';
+							$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
+						$modals_output .= '<p class="ddc-font">' . $details . $price_display . '</p>';
 
-						// End loop.
-						endwhile;
-					$modals_output .= '</div>';	
+					// End loop.
+					endwhile;
+				$modals_output .= '</div>';	
 
-						$modals_output .= '<div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div>';
-
-
-					
-				$modals_output .= '</div>';
-			
 			// No value.
 			else :
 						$modals_output .= '<div class="price-item no-details"><div><a href="https://gquebbq.orderexperience.net/locations?_gl=1%2au4jpjn%2a_ga%2aNjIxNTM1MDc2LjE3NzE4Njk5NTA.%2a_ga_TLXQSNCW3N%2aczE3ODA5MzgwMTQkbzI2JGcxJHQxNzgwOTM4NzMwJGoyNyRsMCRoMA.." id="order-now" target="_blank">Order Now</a></div></div>';
@@ -702,7 +698,7 @@ if( $featured_posts ):
         <!-- Apply responsive class attribute (escaped for security) -->
         <li class="<?php echo esc_attr( $class ); ?>">
           <!-- Display featured image as background (URL escaped for security) -->
-          <div class="featured-image-wrapper"><div class="menu-featured-image" style="background-image: url(<?php echo esc_url( $featured_image_url ); ?>) "></div></div>
+          <div class="featured-image-wrapper"><div class="menu-featured-image" data-modal-id="<?php echo esc_attr( $modal_id ); ?>" style="background-image: url(<?php echo esc_url( $featured_image_url ); ?>) "></div></div>
           <div class="featured-content">
               <!-- Output post title -->
               <h4 class="ddc-font"><?php echo $post->post_title; ?></h4>
@@ -742,7 +738,8 @@ if( $featured_posts ):
 								$details = get_sub_field('details');
 								$price = get_sub_field('price');
 								
-								$modals_output .= '<p class="ddc-font">' . $details . '<span class="sp-font color-rust">'. esc_html( $price ). '</span></p>';
+							$price_display = $price ? '<span class="sp-font color-rust">$'. esc_html( $price ). '</span>' : '';
+							$modals_output .= '<p class="ddc-font">' . $details . $price_display . '</p>';
 
 							// End loop.
 							endwhile;

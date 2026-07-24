@@ -5,6 +5,49 @@ All notable changes to the Dynamic Post Filter plugin are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] — 2026-07-24
+
+### Added
+
+- **Featured Image Clickability** - Click featured images to trigger modal popups
+  - Added `data-modal-id` attributes to featured image elements in all rendering contexts (initial render, AJAX, featured slider)
+  - Featured image clicks now open modals using same modal system as plus-icon buttons
+  - Implemented shared `openModal()` helper function in JavaScript for consistent behavior
+
+### Changed
+
+- **Price Display Enhancement** (`includes/shortcode.php`)
+  - Added $ currency prefix to all price displays
+  - Implemented conditional check: only display $ prefix if price value is not empty
+  - Applied to all three rendering contexts: initial render, AJAX handler, featured slider
+  - Updated in `all_menu_callback()`, `all_menu_filter_ajax()`, and `featured_callback()` functions
+
+- **JavaScript Improvements** (`js/all-menu-filter.js`)
+  - Refactored modal opening logic into reusable `openModal()` helper function
+  - Improved code formatting and indentation consistency
+  - Added `.menu-featured-image` click handler for featured image modal triggers
+  - Code cleanup and minor formatting improvements
+
+### Technical Details
+
+- Featured image modal trigger: Uses existing `data-modal-id` linking pattern established in v1.2.0
+- Price formatting: Ternary operator checks if price value exists before rendering span with $ prefix
+- Event delegation: Lity library continues to recognize dynamically added featured image elements
+- Backward compatibility: All changes are non-breaking; existing functionality preserved
+
+### Files Modified
+
+- `includes/shortcode.php` — Added featured image modal IDs, conditional price formatting in three functions
+- `js/all-menu-filter.js` — Added `openModal()` helper, `.menu-featured-image` click handler, code formatting
+
+### Testing
+
+- ✅ Featured images clickable in all three contexts (initial, AJAX, featured slider)
+- ✅ Modals open correctly when featured image clicked
+- ✅ Prices display with $ prefix only when price value is present
+- ✅ Scroll position preserved when modal opened via featured image click
+- ✅ All existing functionality remains intact
+
 ## [1.2.0] — 2026-07-24
 
 ### Added
